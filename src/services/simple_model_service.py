@@ -10,6 +10,7 @@ import uuid
 
 from .model_service import ModelService
 from ..models import (
+    Concept,
     ConceptModel,
     DatabaseQueryPlan,
     ModelMetadata,
@@ -75,11 +76,57 @@ class SimpleModelService(ModelService):
         ctx.model_metadata = meta
         return ctx, meta
 
+    def generate_problem_framing(self, context: ProjectContext) -> Tuple[ProblemFraming, ConceptModel, ModelMetadata]:
+        """Generate draft ProblemFraming and ConceptModel from ProjectContext."""
+        # Naive problem statement
+        problem_statement = (
+            f"The research aims to investigate {context.title.lower()} "
+            f"by examining key factors, relationships, and outcomes."
+        )
+
+        # Simple goals derived from keywords
+        goals = [
+            f"Understand the role of {kw}" for kw in context.initial_keywords[:3]
+        ] if context.initial_keywords else ["Explore the problem domain"]
+
+        # Scope
+        scope_in = ["Academic literature", "Empirical studies", "Recent publications (last 10 years)"]
+        scope_out = ["Non-peer-reviewed sources", "Opinion pieces"]
+
+        framing = ProblemFraming(
+            project_id=context.id,
+            problem_statement=problem_statement,
+            goals=goals,
+            scope_in=scope_in,
+            scope_out=scope_out,
+            stakeholders=["Researchers", "Practitioners"],
+        )
+
+        # Naive concept extraction: use first few keywords as concepts
+        concepts = [
+            Concept(
+                id=f"concept_{i}",
+                label=kw.title(),
+                description=f"Key concept: {kw}",
+                type="domain_concept"
+            )
+            for i, kw in enumerate(context.initial_keywords[:5])
+        ] if context.initial_keywords else []
+
+        concept_model = ConceptModel(
+            project_id=context.id,
+            concepts=concepts,
+            relations=[],
+        )
+
+        meta = self._meta("Generated ProblemFraming and ConceptModel from ProjectContext")
+        framing.model_metadata = meta
+        concept_model.model_metadata = meta
+
+        return framing, concept_model, meta
+
     # The remaining methods are placeholders to satisfy the interface; they raise
     # NotImplementedError for now until later stages are built.
-
-    def generate_problem_framing(self, context: ProjectContext) -> Tuple[ProblemFraming, ConceptModel, ModelMetadata]:
-        raise NotImplementedError
 
     def generate_research_questions(self, framing: ProblemFraming, concepts: ConceptModel) -> Tuple[ResearchQuestionSet, ModelMetadata]:
         raise NotImplementedError
@@ -95,4 +142,3 @@ class SimpleModelService(ModelService):
 
     def summarize_strategy(self, pkg: StrategyPackage) -> Tuple[str, ModelMetadata]:
         raise NotImplementedError
-
