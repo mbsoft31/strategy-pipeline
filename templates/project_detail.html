@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+
+{% block title %}{{ project.title }} - Project{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto animate-slide-in">
+    <!-- Breadcrumb -->
+    <nav class="mb-6" aria-label="Breadcrumb">
+        <ol class="flex items-center space-x-2 text-sm text-gray-500">
+            <li><a href="/" class="hover:text-gray-700">Projects</a></li>
+            <li><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></li>
+            <li class="text-gray-900 font-medium truncate max-w-md">{{ project.title }}</li>
+        </ol>
+    </nav>
+
+    <!-- Project Header -->
+    <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+        <div class="flex items-start justify-between">
+            <div class="flex-1">
+                <h1 class="text-2xl font-bold text-gray-900 mb-2">
+                    {{ project.title }}
+                </h1>
+                <p class="text-gray-600 mb-4">
+                    {{ project.short_description }}
+                </p>
+                <div class="flex items-center space-x-4 text-sm text-gray-500">
+                    <span class="flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        Created {{ project.created_at|format_date }}
+                    </span>
+                    {% if project.initial_keywords %}
+                    <span class="flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                        </svg>
+                        {{ project.initial_keywords|length }} keywords
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="ml-4">
+                <span class="status-{{ project.status.value if project.status else 'draft' }} px-4 py-2 rounded-full text-sm font-medium">
+                    {{ project.status.value.replace('_', ' ').title() if project.status else 'Draft' }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stage Progress -->
+    <div class="bg-white rounded-lg shadow-sm p-8 mb-6">
+        <h2 class="text-xl font-semibold text-gray-900 mb-6">Pipeline Progress</h2>
+
+        <!-- Visual stage progress -->
+        <div class="relative">
+            <div class="stage-progress flex items-center justify-between relative z-10 mb-8">
+                {% for stage in stages %}
+                <div class="flex flex-col items-center" style="flex: 1;">
+                    <!-- Stage circle -->
+                    <div class="relative">
+                        <div class="w-16 h-16 rounded-full flex items-center justify-center font-bold text-xl border-4
+                            {% if stage.status == 'approved' %}
+                                bg-green-500 text-white border-green-500
+                            {% elif stage.status == 'draft' %}
+                                bg-yellow-400 text-white border-yellow-400
+                            {% else %}
+                                bg-gray-200 text-gray-500 border-gray-300
+                            {% endif %}
+                        ">
+                            {% if stage.status == 'approved' %}
+                                <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                </svg>
+                            {% elif stage.status == 'draft' %}
+                                <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
+                                </svg>
+                            {% else %}
+                                {{ stage.number }}
+                            {% endif %}
+                        </div>
+
+                        <!-- Connector line (except for last stage) -->
+                        {% if not loop.last %}
+                        <div class="absolute top-8 left-full w-full h-1
+                            {% if stage.status == 'approved' %}bg-green-500{% else %}bg-gray-300{% endif %}
+                            " style="transform: translateX(-50%);"></div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Stage info -->
+                    <div class="mt-4 text-center">
+                        <div class="font-medium text-gray-900 text-sm">{{ stage.name }}</div>
+                        <div class="text-xs text-gray-500 mt-1">
+                            {% if stage.status == 'approved' %}
+                                <span class="text-green-600 font-medium">Completed</span>
+                            {% elif stage.status == 'draft' %}
+                                <span class="text-yellow-600 font-medium">In Review</span>
+                            {% else %}
+                                <span class="text-gray-400">Not Started</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Stages detail cards -->
+        <div class="space-y-4">
+            {% for stage in stages %}
+            <div class="border border-gray-200 rounded-lg overflow-hidden
+                {% if stage.status == 'draft' %}border-l-4 border-l-yellow-400{% endif %}
+                {% if stage.status == 'approved' %}border-l-4 border-l-green-500{% endif %}
+            ">
+                <div class="p-4 bg-gray-50 flex items-center justify-between">
+                    <div class="flex items-center">
+                        <span class="text-2xl font-bold text-gray-400 mr-4">{{ stage.number }}</span>
+                        <div>
+                            <h3 class="font-semibold text-gray-900">{{ stage.name }}</h3>
+                            <p class="text-sm text-gray-600">
+                                {% if stage.id == 'project-setup' %}
+                                    Define project context, title, keywords, and constraints
+                                {% elif stage.id == 'problem-framing' %}
+                                    Articulate problem statement, goals, scope, and extract key concepts
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        {% if stage.status == 'not_started' and stage.id in next_stages %}
+                            <a href="/project/{{ project_id }}/stage/{{ stage.id }}"
+                               class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium">
+                                Start Stage
+                            </a>
+                        {% elif stage.status == 'draft' %}
+                            <a href="/project/{{ project_id }}/stage/{{ stage.id }}"
+                               class="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 text-sm font-medium">
+                                Review & Approve
+                            </a>
+                        {% elif stage.status == 'approved' %}
+                            <a href="/project/{{ project_id }}/stage/{{ stage.id }}"
+                               class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 text-sm font-medium">
+                                View Details
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Show artifact summary if exists -->
+                {% if stage.artifact %}
+                <div class="p-4 bg-white border-t border-gray-200">
+                    <div class="text-sm">
+                        {% if stage.id == 'project-setup' %}
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <span class="text-gray-500">Keywords:</span>
+                                    <span class="ml-2 text-gray-900">
+                                        {% if stage.artifact.initial_keywords %}
+                                            {{ stage.artifact.initial_keywords[:3]|join(', ') }}
+                                            {% if stage.artifact.initial_keywords|length > 3 %}+{{ stage.artifact.initial_keywords|length - 3 }} more{% endif %}
+                                        {% else %}
+                                            None
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-500">Discipline:</span>
+                                    <span class="ml-2 text-gray-900">{{ stage.artifact.discipline or 'Not specified' }}</span>
+                                </div>
+                            </div>
+                        {% elif stage.id == 'problem-framing' %}
+                            <div class="space-y-2">
+                                <div>
+                                    <span class="text-gray-500">Problem:</span>
+                                    <span class="ml-2 text-gray-900">{{ stage.artifact.problem_statement[:120] }}...</span>
+                                </div>
+                                <div class="flex items-center space-x-4">
+                                    <span class="text-gray-500">Goals: <span class="font-medium text-gray-900">{{ stage.artifact.goals|length }}</span></span>
+                                    {% if stage.extra_artifacts and stage.extra_artifacts.concept_model %}
+                                    <span class="text-gray-500">Concepts: <span class="font-medium text-gray-900">{{ stage.extra_artifacts.concept_model.concepts|length }}</span></span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <a href="#" class="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow border border-gray-200">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="font-medium text-gray-900">Export Strategy</h3>
+                    <p class="text-sm text-gray-600 mt-1">Download as Markdown or PDF</p>
+                </div>
+                <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+            </div>
+        </a>
+
+        <a href="#" class="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow border border-gray-200">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="font-medium text-gray-900">View Timeline</h3>
+                    <p class="text-sm text-gray-600 mt-1">See all changes and approvals</p>
+                </div>
+                <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </div>
+        </a>
+
+        <a href="#" class="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow border border-gray-200">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="font-medium text-gray-900">Share Project</h3>
+                    <p class="text-sm text-gray-600 mt-1">Collaborate with your team</p>
+                </div>
+                <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
+                </svg>
+            </div>
+        </a>
+    </div>
+</div>
+{% endblock %}
+

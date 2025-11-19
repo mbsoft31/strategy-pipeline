@@ -27,9 +27,33 @@ You can also run the example module:
 python -m docs.examples.stage0_demo
 ```
 
+## Web UI (Recommended)
+
+The pipeline includes a modern web interface with the best user experience:
+
+```bash
+# Install Flask
+pip install -r requirements.txt
+
+# Run the web server
+python interfaces/web_app.py
+
+# Open browser to http://localhost:5000
+```
+
+**Features:**
+- 🎨 Beautiful, responsive design
+- ⚡ Real-time updates without page reloads (HTMX)
+- 📊 Visual stage progression timeline
+- 🎯 AI-powered suggestions and guidance
+- 💾 Auto-save drafts
+- ✅ One-click approval workflow
+
+See `docs/WEB_UI_README.md` for detailed documentation.
+
 ## CLI usage
 
-The pipeline includes a basic CLI for starting projects, running stages, and approving artifacts:
+Alternative command-line interface for automation:
 
 ```bash
 # Start a new project (Stage 0)

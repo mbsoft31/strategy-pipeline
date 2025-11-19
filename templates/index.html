@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}Projects - HITL Research Strategy Pipeline{% endblock %}
+
+{% block content %}
+<div class="animate-slide-in">
+    <!-- Hero Section -->
+    <div class="bg-white rounded-lg shadow-sm p-8 mb-8">
+        <div class="max-w-3xl">
+            <h1 class="text-3xl font-bold text-gray-900 mb-4">
+                Research Strategy Pipeline
+            </h1>
+            <p class="text-lg text-gray-600 mb-6">
+                Create structured, reproducible research strategies with AI-assisted guidance.
+                From raw idea to systematic review protocol in iterative steps.
+            </p>
+            <a href="/project/new"
+               class="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Start New Project
+            </a>
+        </div>
+    </div>
+
+    <!-- Projects List -->
+    <div class="bg-white rounded-lg shadow-sm">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-900">Your Projects</h2>
+        </div>
+
+        {% if projects %}
+        <div class="divide-y divide-gray-200">
+            {% for project in projects %}
+            <a href="/project/{{ project.id }}"
+               class="block px-6 py-4 hover:bg-gray-50 transition-colors">
+                <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                        <h3 class="text-lg font-medium text-gray-900 mb-1">
+                            {{ project.title }}
+                        </h3>
+                        <p class="text-sm text-gray-500">
+                            Created {{ project.created_at[:10] }}
+                        </p>
+                    </div>
+                    <div class="ml-4 flex items-center space-x-3">
+                        <span class="status-{{ project.status }} px-3 py-1 rounded-full text-sm font-medium">
+                            {{ project.status.replace('_', ' ').title() }}
+                        </span>
+                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="px-6 py-12 text-center">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">No projects yet</h3>
+            <p class="mt-1 text-sm text-gray-500">Get started by creating your first research strategy project.</p>
+            <div class="mt-6">
+                <a href="/project/new"
+                   class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    New Project
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Quick Guide -->
+    <div class="mt-8 bg-blue-50 rounded-lg p-6 border border-blue-100">
+        <h3 class="text-lg font-semibold text-blue-900 mb-3">How it works</h3>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="flex items-start">
+                <div class="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-semibold mr-3">
+                    0
+                </div>
+                <div>
+                    <h4 class="font-medium text-gray-900">Project Setup</h4>
+                    <p class="text-sm text-gray-600 mt-1">Enter your research idea and generate a structured context</p>
+                </div>
+            </div>
+            <div class="flex items-start">
+                <div class="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-semibold mr-3">
+                    1
+                </div>
+                <div>
+                    <h4 class="font-medium text-gray-900">Problem Framing</h4>
+                    <p class="text-sm text-gray-600 mt-1">Define scope, goals, and extract key concepts</p>
+                </div>
+            </div>
+            <div class="flex items-start">
+                <div class="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-semibold mr-3">
+                    2
+                </div>
+                <div>
+                    <h4 class="font-medium text-gray-900">Research Questions</h4>
+                    <p class="text-sm text-gray-600 mt-1">Structure specific, answerable questions</p>
+                </div>
+            </div>
+            <div class="flex items-start">
+                <div class="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-semibold mr-3">
+                    3+
+                </div>
+                <div>
+                    <h4 class="font-medium text-gray-900">Search & Screen</h4>
+                    <p class="text-sm text-gray-600 mt-1">Build queries and criteria</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+
+{% block title %}Project Setup - {{ project_id }}{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto animate-slide-in">
+    <!-- Breadcrumb -->
+    <nav class="mb-6" aria-label="Breadcrumb">
+        <ol class="flex items-center space-x-2 text-sm text-gray-500">
+            <li><a href="/" class="hover:text-gray-700">Projects</a></li>
+            <li><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></li>
+            <li><a href="/project/{{ project_id }}" class="hover:text-gray-700">Project</a></li>
+            <li><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></li>
+            <li class="text-gray-900 font-medium">Stage 0: Project Setup</li>
+        </ol>
+    </nav>
+
+    <div class="bg-white rounded-lg shadow-sm p-8">
+        <!-- Stage header -->
+        <div class="flex items-start justify-between mb-8 pb-6 border-b border-gray-200">
+            <div>
+                <div class="flex items-center mb-2">
+                    <span class="text-3xl font-bold text-gray-400 mr-4">0</span>
+                    <h1 class="text-2xl font-bold text-gray-900">Project Setup</h1>
+                </div>
+                <p class="text-gray-600 ml-14">
+                    Review and refine the generated project context. This forms the foundation for all subsequent stages.
+                </p>
+            </div>
+            {% if artifact and artifact.status %}
+            <span class="status-{{ artifact.status.value }} px-4 py-2 rounded-full text-sm font-medium">
+                {{ artifact.status.value.replace('_', ' ').title() }}
+            </span>
+            {% endif %}
+        </div>
+
+        <!-- AI Suggestions -->
+        {% if prompts %}
+        <div class="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h3 class="text-sm font-semibold text-blue-900 mb-2 flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z"></path>
+                </svg>
+                Review Checklist
+            </h3>
+            <ul class="text-sm text-blue-800 space-y-1">
+                {% for prompt in prompts %}
+                <li>• {{ prompt }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <!-- Editable form -->
+        <form method="POST"
+              action="/project/{{ project_id }}/stage/project-setup/approve"
+              hx-post="/project/{{ project_id }}/stage/project-setup/approve"
+              hx-target="#approval-result"
+              hx-indicator="#saving"
+              class="space-y-6">
+
+            <!-- Title -->
+            <div>
+                <label for="title" class="block text-sm font-medium text-gray-700 mb-2">
+                    Project Title
+                    <span class="text-red-500">*</span>
+                </label>
+                <input
+                    type="text"
+                    id="title"
+                    name="title"
+                    value="{{ artifact.title if artifact else '' }}"
+                    required
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Clear, descriptive title for your research"
+                />
+            </div>
+
+            <!-- Short Description -->
+            <div>
+                <label for="short_description" class="block text-sm font-medium text-gray-700 mb-2">
+                    Short Description
+                </label>
+                <textarea
+                    id="short_description"
+                    name="short_description"
+                    rows="4"
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Brief overview of your research idea..."
+                >{{ artifact.short_description if artifact else '' }}</textarea>
+            </div>
+
+            <!-- Domain fields in grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label for="discipline" class="block text-sm font-medium text-gray-700 mb-2">
+                        Discipline
+                    </label>
+                    <input
+                        type="text"
+                        id="discipline"
+                        name="discipline"
+                        value="{{ artifact.discipline if artifact and artifact.discipline else '' }}"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="e.g., Computer Science"
+                    />
+                </div>
+
+                <div>
+                    <label for="subfield" class="block text-sm font-medium text-gray-700 mb-2">
+                        Subfield
+                    </label>
+                    <input
+                        type="text"
+                        id="subfield"
+                        name="subfield"
+                        value="{{ artifact.subfield if artifact and artifact.subfield else '' }}"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="e.g., Machine Learning"
+                    />
+                </div>
+
+                <div>
+                    <label for="application_area" class="block text-sm font-medium text-gray-700 mb-2">
+                        Application Area
+                    </label>
+                    <input
+                        type="text"
+                        id="application_area"
+                        name="application_area"
+                        value="{{ artifact.application_area if artifact and artifact.application_area else '' }}"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="e.g., Healthcare"
+                    />
+                </div>
+            </div>
+
+            <!-- Keywords -->
+            <div x-data="{ keywords: {{ artifact.initial_keywords|tojson if artifact and artifact.initial_keywords else '[]' }} }">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Keywords
+                    <span class="text-gray-500 text-xs ml-2">(Press Enter to add)</span>
+                </label>
+
+                <div class="flex flex-wrap gap-2 mb-2">
+                    <template x-for="(keyword, index) in keywords" :key="index">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                            <span x-text="keyword"></span>
+                            <button type="button" @click="keywords.splice(index, 1)" class="ml-2 text-blue-600 hover:text-blue-800">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                                </svg>
+                            </button>
+                        </span>
+                    </template>
+                </div>
+
+                <input
+                    type="text"
+                    @keydown.enter.prevent="if ($el.value.trim()) { keywords.push($el.value.trim()); $el.value = ''; }"
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Type a keyword and press Enter..."
+                />
+
+                <!-- Hidden field for form submission -->
+                <input type="hidden" name="initial_keywords" :value="JSON.stringify(keywords)" />
+            </div>
+
+            <!-- User Notes -->
+            <div>
+                <label for="user_notes" class="block text-sm font-medium text-gray-700 mb-2">
+                    Notes (Optional)
+                </label>
+                <textarea
+                    id="user_notes"
+                    name="user_notes"
+                    rows="3"
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Any notes or comments about this stage..."
+                ></textarea>
+            </div>
+
+            <!-- Actions -->
+            <div id="approval-result" class="flex items-center justify-between pt-6 border-t border-gray-200">
+                <a href="/project/{{ project_id }}" class="text-gray-600 hover:text-gray-900">
+                    ← Back to Project
+                </a>
+                <div class="flex items-center space-x-4">
+                    <div id="saving" class="htmx-indicator flex items-center text-blue-600">
+                        <svg class="animate-spin h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Saving...
+                    </div>
+
+                    <button
+                        type="submit"
+                        class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium shadow-sm flex items-center"
+                        data-success-message="Project context approved!"
+                    >
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                        </svg>
+                        Approve & Continue
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
