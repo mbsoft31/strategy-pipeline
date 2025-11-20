@@ -56,6 +56,8 @@ class ProblemFraming:
     scope_in: List[str] = field(default_factory=list)
     scope_out: List[str] = field(default_factory=list)
     stakeholders: List[str] = field(default_factory=list)
+    research_gap: Optional[str] = None  # What's missing in current literature
+    critique_report: Optional[str] = None  # AI critique + validation report
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     status: ApprovalStatus = ApprovalStatus.DRAFT
