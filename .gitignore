@@ -8,6 +8,12 @@ __pycache__/
 .venv/
 .env/
 
+# Environment configuration
+.env
+
+# Cache directories
+.cache/
+
 # IDEs and editors
 .idea/
 .vscode/
@@ -27,3 +33,4 @@ Thumbs.db
 logs/
 *.log
 
+/docs/next-steps/scratch_project/
