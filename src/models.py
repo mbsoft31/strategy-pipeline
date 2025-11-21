@@ -151,6 +151,7 @@ class DatabaseQuery:
     boolean_query_string: str = ""
     notes: Optional[str] = None
     hit_count_estimate: Optional[int] = None
+    complexity_analysis: Optional[dict] = None  # Complexity metrics and guidance
 
 
 @dataclass
@@ -180,8 +181,8 @@ class Criterion:
 class ScreeningCriteria:
     """Collection of screening criteria."""
     project_id: str
-    criteria: List[Criterion] = field(default_factory=list)
-    version: str = "v1.0"
+    inclusion_criteria: List[str] = field(default_factory=list)
+    exclusion_criteria: List[str] = field(default_factory=list)
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     status: ApprovalStatus = ApprovalStatus.DRAFT
@@ -223,3 +224,16 @@ class StrategyPackage:
     screening_checklist: Optional[ScreeningChecklist]
     generated_summary_markdown: str
     metadata: Dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class StrategyExportBundle:
+    project_id: str
+    exported_files: List[str] = field(default_factory=list)  # relative paths under data/<project_id>/export/
+    notes: Optional[str] = None
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    status: ApprovalStatus = ApprovalStatus.DRAFT
+    model_metadata: Optional[ModelMetadata] = None
+    user_notes: Optional[str] = None
+

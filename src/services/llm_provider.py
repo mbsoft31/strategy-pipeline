@@ -10,6 +10,13 @@ import logging
 from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional
 
+# Expose a module-level OpenAI symbol for tests to patch
+try:
+    from openai import OpenAI as _ModuleOpenAI
+except Exception:
+    _ModuleOpenAI = None  # tests can patch this symbol
+OpenAI = _ModuleOpenAI
+
 from src.config import get_config, LLMProvider as ProviderEnum
 from src.utils.exceptions import LLMProviderError, RateLimitError, AuthenticationError
 
@@ -71,7 +78,10 @@ class OpenAIProvider(LLMProvider):
     """OpenAI API implementation."""
 
     def __init__(self):
-        """Initialize OpenAI provider with config."""
+        """Initialize OpenAI provider with config.
+
+        Supports OpenRouter by setting base_url in config.
+        """
         config = get_config()
         api_key = config.llm.openai_api_key
 
@@ -83,15 +93,24 @@ class OpenAIProvider(LLMProvider):
 
         # Import here to make openai optional for non-OpenAI users
         try:
-            from openai import OpenAI
+            from openai import OpenAI as OpenAIClient
             import openai as openai_module
             self.openai_module = openai_module
+            # Also set module-level OpenAI for test patching
+            globals()["OpenAI"] = OpenAIClient
         except ImportError:
             raise LLMProviderError(
                 "OpenAI package not installed. Run: pip install openai"
             )
 
-        self.client = OpenAI(api_key=api_key)
+        # Support OpenRouter and other OpenAI-compatible APIs
+        base_url = getattr(config.llm, 'openai_base_url', None)
+        if base_url:
+            logger.info(f"Using custom base URL: {base_url}")
+            self.client = OpenAIClient(api_key=api_key, base_url=base_url)
+        else:
+            self.client = OpenAIClient(api_key=api_key)
+
         self.model = config.llm.openai_model
         self.temperature = config.llm.openai_temperature
         self.max_tokens = config.llm.openai_max_tokens
@@ -223,6 +242,77 @@ class MockProvider(LLMProvider):
                 ]
             })
 
+        # Search Strategy Generation (for Orchestrator Agent)
+        elif "search strategy" in combined or "academic database" in combined:
+            # Generate strategy based on question keywords
+            if "hallucination" in user_prompt.lower() or "llm" in user_prompt.lower():
+                return json.dumps({
+                    "databases": ["openalex", "arxiv"],
+                    "queries": [
+                        "LLM hallucination detection",
+                        "large language model factuality",
+                        "reducing hallucinations in language models"
+                    ],
+                    "reasoning": "Using arXiv for recent AI/ML papers on hallucinations and OpenAlex for broader academic coverage including evaluation methods and benchmarks."
+                })
+            elif "prompt engineering" in user_prompt.lower() or "prompting" in user_prompt.lower():
+                return json.dumps({
+                    "databases": ["openalex", "arxiv", "semanticscholar"],
+                    "queries": [
+                        "prompt engineering techniques",
+                        "few-shot prompting",
+                        "chain-of-thought reasoning"
+                    ],
+                    "reasoning": "Using arXiv for cutting-edge techniques, OpenAlex for comprehensive coverage, and Semantic Scholar for citation-weighted results."
+                })
+            elif "retrieval" in user_prompt.lower() or "rag" in user_prompt.lower():
+                return json.dumps({
+                    "databases": ["openalex", "arxiv"],
+                    "queries": [
+                        "retrieval augmented generation",
+                        "RAG systems",
+                        "knowledge retrieval for LLMs"
+                    ],
+                    "reasoning": "Focusing on arXiv for recent RAG papers and OpenAlex for broader retrieval literature."
+                })
+            else:
+                # Generic fallback strategy
+                return json.dumps({
+                    "databases": ["openalex"],
+                    "queries": [user_prompt.replace("Research Question:", "").strip()],
+                    "reasoning": "Using OpenAlex as the most comprehensive database for general research questions."
+                })
+
+        # Synthesis detection
+        if "respond only in json" in combined and "synthesis" in combined and "bullets" in combined:
+            # Return mock structured synthesis
+            return json.dumps({
+                "synthesis": "Recent work on LLM hallucination detection spans heuristic validation, retrieval-augmented grounding, and self-consistency approaches. Clusters indicate convergence toward multi-stage pipelines combining uncertainty estimation and external knowledge bases. While detection precision improves, recall of subtle factual errors remains challenging. Emerging trends emphasize lightweight runtime guards and hybrid semantic-symbolic validation. Overall, the literature crystallizes around scalable guardrails but lacks standardized benchmarks across clinical and high-stakes domains.",
+                "bullets": [
+                    "Multi-stage pipelines combining retrieval and self-checking dominate approaches.",
+                    "Uncertainty estimation often correlates with hallucination likelihood but is noisy.",
+                    "Knowledge-grounding reduces blatant fabrication but not subtle misattribution.",
+                    "Self-consistency voting improves reliability for reasoning tasks.",
+                    "Hybrid symbolic-semantic validation frameworks are emerging.",
+                    "Benchmark fragmentation limits reproducibility of reported gains."
+                ],
+                "methods": [
+                    "Retrieval augmented validation",
+                    "Self-consistency ensemble checks",
+                    "Uncertainty scoring + threshold gating"
+                ],
+                    "trends": [
+                    "Shift toward lighter, real-time validation layers",
+                    "Integration of external structured knowledge bases",
+                    "Growing interest in adaptive guardrails and policy tuning"
+                ],
+                "gaps": [
+                    "Lack of domain-specific hallucination benchmarks",
+                    "Limited validation for non-English and multimodal inputs",
+                    "Weak handling of subtle factual drift over long generations"
+                ]
+            })
+
         # Default fallback
         else:
             return json.dumps({
@@ -253,4 +343,3 @@ def get_llm_provider() -> LLMProvider:
     else:
         logger.warning(f"Unknown provider {config.llm.provider}, using Mock")
         return MockProvider()
-

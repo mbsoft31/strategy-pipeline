@@ -47,6 +47,7 @@ class ConceptBlock:
     """
     label: str
     terms: List[SearchTerm] = field(default_factory=list)
+    excluded_terms: List[SearchTerm] = field(default_factory=list)  # New: terms to exclude (NOT)
 
     def add_term(self, text: str, tag: FieldTag = FieldTag.KEYWORD):
         """Add a term to this concept block.
@@ -56,6 +57,10 @@ class ConceptBlock:
             tag: Field tag for this term
         """
         self.terms.append(SearchTerm(text, tag))
+
+    def add_excluded_term(self, text: str, tag: FieldTag = FieldTag.KEYWORD):
+        """Add a NOT term to this concept block (Anti-hallucination layer explicit exclusions)."""
+        self.excluded_terms.append(SearchTerm(text, tag))
 
 
 @dataclass
@@ -69,4 +74,3 @@ class QueryPlan:
     Becomes: (elderly OR "older adults") AND (diabetes OR "type 2 diabetes")
     """
     blocks: List[ConceptBlock] = field(default_factory=list)
-

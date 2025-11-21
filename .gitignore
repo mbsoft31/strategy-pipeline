@@ -3,34 +3,118 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+*.whl
 
 # Virtual environments
 .venv/
+venv/
+ENV/
+env/
 .env/
 
 # Environment configuration
 .env
+.env.local
+.env.*.local
 
 # Cache directories
 .cache/
+.mypy_cache/
+.dmypy.json
+dmypy.json
 
 # IDEs and editors
 .idea/
 .vscode/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+*.sublime-project
+*.sublime-workspace
 
-# OS / misc
+# OS files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+desktop.ini
 
 # Project data
 /data/
+*.db
+*.sqlite
+*.sqlite3
 
-# Tests
+# Tests and coverage
 .pytest_cache/
 .coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+.hypothesis/
 
 # Logs
 logs/
 *.log
+*.log.*
+*.out
+*.err
 
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb_checkpoints/
+
+# Distribution / packaging
+.Python
+develop-eggs/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+MANIFEST
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~.nib
+*.old
+
+# Documentation build
+docs/_build/
+site/
+
+# Scratch/test projects
 /docs/next-steps/scratch_project/
+
+# Local development files
+.python-version
+pyrightconfig.json
+
+# CI/CD
+.github/workflows/local*.yml
+

@@ -2,7 +2,7 @@
 
 from typing import Type
 
-from .models import QueryPlan
+from .models import QueryPlan, ConceptBlock
 from .dialects import (
     DatabaseDialect, PubMedDialect, ScopusDialect,
     ArxivDialect, OpenAlexDialect, SemanticScholarDialect, CrossRefDialect
@@ -49,10 +49,18 @@ class SyntaxBuilder:
             for term in block.terms:
                 formatted = self.dialect.format_term(term)
                 term_strings.append(formatted)
-
+            # NEW: handle excluded terms
+            excluded_strings = []
+            for ex_term in getattr(block, 'excluded_terms', []):
+                formatted_ex = self.dialect.format_term(ex_term)
+                excluded_strings.append(formatted_ex)
             if term_strings:
-                # Join terms with OR
                 group_str = self.dialect.join_or(term_strings)
+                # Append NOT exclusions using dialect-specific formatting
+                if excluded_strings:
+                    not_str = self.dialect.format_not(excluded_strings)
+                    if not_str:
+                        group_str = f"{group_str} {not_str}"
                 group_strings.append(group_str)
 
         # Join groups with AND
@@ -95,4 +103,3 @@ def get_builder(db_name: str) -> SyntaxBuilder:
             f"Unknown database: {db_name}. "
             f"Supported: pubmed, scopus, arxiv, openalex, semanticscholar, crossref"
         )
-

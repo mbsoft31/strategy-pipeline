@@ -28,6 +28,17 @@ class DatabaseDialect(ABC):
         """Join groups with AND operator."""
         pass
 
+    def format_not(self, terms: List[str]) -> str:
+        """Format NOT clause for excluded terms.
+
+        Default implementation: NOT (term1 OR term2)
+        Dialects can override for database-specific syntax.
+        """
+        if not terms:
+            return ""
+        or_group = self.join_or(terms)
+        return f"NOT {or_group}" if or_group else ""
+
 
 class PubMedDialect(DatabaseDialect):
     """PubMed/MEDLINE syntax.
@@ -149,6 +160,16 @@ class ScopusDialect(DatabaseDialect):
             AND-joined string
         """
         return " AND ".join(groups)
+
+    def format_not(self, terms: List[str]) -> str:
+        """Format NOT clause for Scopus using AND NOT syntax.
+
+        Scopus prefers: AND NOT TITLE-ABS-KEY(excluded terms)
+        """
+        if not terms:
+            return ""
+        inner = " OR ".join(terms)
+        return f"AND NOT TITLE-ABS-KEY({inner})"
 
 
 class ArxivDialect(DatabaseDialect):

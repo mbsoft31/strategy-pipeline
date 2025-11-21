@@ -46,6 +46,10 @@ class LLMConfig(BaseSettings):
         default=None,
         description="OpenAI API key"
     )
+    openai_base_url: Optional[str] = Field(
+        default=None,
+        description="Custom base URL (for OpenRouter, etc.)"
+    )
     openai_model: str = Field(
         default="gpt-4o-mini",
         description="OpenAI model name"

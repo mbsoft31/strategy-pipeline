@@ -18,3 +18,10 @@ requests>=2.31.0
 # Sprint 3: Web UI
 streamlit>=1.30.0
 
+# Sprint 4: SLR Integration
+httpx>=0.25.0              # HTTP client for async requests
+ratelimit>=2.2.1           # Rate limiting decorator
+tenacity>=8.2.3            # Retry logic with exponential backoff
+bibtexparser>=1.4.0        # BibTeX parsing and writing
+python-Levenshtein>=0.21.0 # String similarity for deduplication
+PyYAML>=6.0                # YAML config parsing

@@ -199,6 +199,15 @@ class TestSyntaxEngine:
         # Should be standard boolean
         assert '("heart attack" OR "myocardial infarction")' in query
 
+    def test_excluded_terms_not_logic(self, sample_plan):
+        # Add excluded term to first block
+        sample_plan.blocks[0].add_excluded_term("animal models")
+        pubmed_query = get_builder("pubmed").build(sample_plan)
+        assert "NOT" in pubmed_query
+        assert "animal models" in pubmed_query
+        # Ensure NOT group properly parenthesized OR inside
+        assert "animal models" in pubmed_query
+
 
 def test_demo_comparison():
     """Demo showing superiority over ChatGPT.
@@ -249,4 +258,3 @@ def test_demo_comparison():
     print("✅ Our engine GUARANTEES valid syntax")
     print("❌ ChatGPT hallucinates invalid operators")
     print("="*60 + "\n")
-

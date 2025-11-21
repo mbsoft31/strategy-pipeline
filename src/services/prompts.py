@@ -152,7 +152,7 @@ Address EVERY issue from the critique.
 """
 
 # ==============================================================================
-# STAGE 2: RESEARCH QUESTIONS (Placeholder for future)
+# STAGE 2: RESEARCH QUESTIONS
 # ==============================================================================
 
 PROMPT_STAGE2_RESEARCH_QUESTIONS = """Based on the approved problem framing, generate structured research questions.
@@ -174,6 +174,97 @@ Return JSON with:
     }}
   ]
 }}
+"""
+
+# ==============================================================================
+# STAGE 3: SEARCH CONCEPT EXPANSION
+# ==============================================================================
+
+PROMPT_STAGE3_SEARCH_EXPANSION = """Based on the approved concepts and research questions, generate search concept blocks.
+
+Concepts:
+{concepts}
+
+Research Questions:
+{research_questions}
+
+For each major concept, create a search block with:
+- Synonyms and related terms
+- Narrower/broader terms
+- Common abbreviations
+- Terms to exclude (if applicable)
+
+Return JSON with:
+{{
+  "blocks": [
+    {{
+      "label": "Concept Label",
+      "description": "Brief description of this conceptual dimension",
+      "terms_included": ["primary term", "synonym1", "synonym2", "abbreviation"],
+      "terms_excluded": ["ambiguous term to exclude"]
+    }}
+  ]
+}}
+
+Include 3-8 blocks covering the main conceptual dimensions.
+Be specific with synonyms and avoid overly broad terms.
+"""
+
+# ==============================================================================
+# STAGE 4: DATABASE QUERY PLAN
+# ==============================================================================
+
+PROMPT_STAGE4_QUERY_GENERATION = """Generate database-specific search queries from concept blocks.
+
+Concept Blocks:
+{blocks}
+
+Target Databases: {databases}
+
+For each database, construct a Boolean query that:
+1. Combines blocks using AND (between blocks) and OR (within block terms)
+2. Uses database-specific syntax (field codes, MeSH terms, etc.)
+3. Applies NOT operator for excluded terms
+4. Is executable or copy-pasteable to the database UI
+
+Database Syntax Guide:
+- **OpenAlex**: Simple keywords with Boolean operators
+  Example: ("machine learning" OR ML) AND (hallucination OR "false information")
+
+- **arXiv**: Field prefixes (ti:, abs:, au:)
+  Example: ti:"machine learning" AND abs:hallucination
+
+- **PubMed**: MeSH terms + field tags [tiab], [mesh], [au]
+  Example: ("machine learning"[tiab] OR ML[tiab]) AND hallucination[tiab]
+  Important: Suggest MeSH terms where applicable
+
+- **Scopus**: TITLE-ABS-KEY() wrapper
+  Example: TITLE-ABS-KEY(("machine learning" OR ML) AND hallucination)
+
+- **Web of Science**: TS=(), TI=(), AU=() syntax
+  Example: TS=("machine learning" OR ML) AND TS=hallucination
+
+- **Semantic Scholar**: Simple keyword search
+  Example: machine learning hallucination
+
+Return JSON with:
+{{
+  "queries": [
+    {{
+      "database": "openalex",
+      "query": "full Boolean query string",
+      "blocks_used": ["block_id1", "block_id2"],
+      "notes": "any database-specific notes or MeSH suggestions"
+    }}
+  ]
+}}
+
+CRITICAL RULES:
+- Use ONLY valid operators for each database (AND, OR, NOT)
+- Never use: NEAR, ADJ, PROX, W/n (these cause syntax errors)
+- Always quote multi-word phrases
+- For PubMed, use [tiab] for title/abstract, [mesh] for MeSH terms
+- For excluded terms, use NOT (excluded1 OR excluded2)
 """
 
 # ==============================================================================

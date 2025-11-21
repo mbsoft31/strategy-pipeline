@@ -8,12 +8,17 @@ from typing import Any, Dict, List, Optional
 from datetime import datetime, UTC
 import uuid
 
-from .models import ApprovalStatus, ProjectContext, ProblemFraming
+from .models import ApprovalStatus, ProjectContext, ProblemFraming, ResearchQuestionSet, SearchConceptBlocks, DatabaseQueryPlan, ScreeningCriteria, StrategyExportBundle
 from .services.model_service import ModelService
 from .services.persistence_service import PersistenceService
 from .stages.base import StageResult, BaseStage
 from .stages.project_setup import ProjectSetupStage
 from .stages.problem_framing import ProblemFramingStage
+from .stages.research_questions import ResearchQuestionStage
+from .stages.search_concept_expansion import SearchConceptExpansionStage
+from .stages.database_query_plan import DatabaseQueryPlanStage
+from .stages.screening_criteria import ScreeningCriteriaStage
+from .stages.strategy_export import StrategyExportStage
 
 
 class PipelineController:
@@ -40,6 +45,11 @@ class PipelineController:
         """Register built-in stages."""
         self.register_stage("project-setup", ProjectSetupStage)
         self.register_stage("problem-framing", ProblemFramingStage)
+        self.register_stage("research-questions", ResearchQuestionStage)
+        self.register_stage("search-concept-expansion", SearchConceptExpansionStage)
+        self.register_stage("database-query-plan", DatabaseQueryPlanStage)
+        self.register_stage("screening-criteria", ScreeningCriteriaStage)
+        self.register_stage("strategy-export", StrategyExportStage)
 
     def register_stage(self, stage_name: str, stage_class: Any) -> None:
         self._stages_registry[stage_name] = stage_class
@@ -109,28 +119,28 @@ class PipelineController:
         return self.persistence_service.list_projects()
 
     def get_next_available_stages(self, project_id: str) -> List[str]:
-        """Determine next stages based on approved artifacts.
-
-        Simple logic for now:
-        - If no ProjectContext approved -> only project-setup
-        - If ProjectContext approved but no ProblemFraming -> problem-framing
-        - Else return all registered (placeholder for future refinement)
-        """
+        """Determine next stages based on approved artifacts."""
         available: List[str] = []
         context = self.get_artifact(project_id, "ProjectContext", ProjectContext)
         framing = self.get_artifact(project_id, "ProblemFraming", ProblemFraming)
+        rq_set = self.get_artifact(project_id, "ResearchQuestionSet", ResearchQuestionSet)
+        search_blocks = self.get_artifact(project_id, "SearchConceptBlocks", SearchConceptBlocks)
+        query_plan = self.get_artifact(project_id, "DatabaseQueryPlan", DatabaseQueryPlan)
+        screening_criteria = self.get_artifact(project_id, "ScreeningCriteria", ScreeningCriteria)
+        export_bundle = self.get_artifact(project_id, "StrategyExportBundle", StrategyExportBundle)
 
-        if context is None:
-            available.append("project-setup")
-            return available
-
-        if context.status != ApprovalStatus.APPROVED and context.status != ApprovalStatus.APPROVED_WITH_NOTES:
-            available.append("project-setup")
-            return available
-
-        if framing is None:
-            available.append("problem-framing")
-            return available
-
-        # Future: logic for later stages
-        return list(self._stages_registry.keys())
+        if context is None or context.status not in (ApprovalStatus.APPROVED, ApprovalStatus.APPROVED_WITH_NOTES):
+            return ["project-setup"]
+        if framing is None or framing.status not in (ApprovalStatus.APPROVED, ApprovalStatus.APPROVED_WITH_NOTES):
+            return ["problem-framing"]
+        if rq_set is None or rq_set.status not in (ApprovalStatus.APPROVED, ApprovalStatus.APPROVED_WITH_NOTES):
+            return ["research-questions"]
+        if search_blocks is None or search_blocks.status not in (ApprovalStatus.APPROVED, ApprovalStatus.APPROVED_WITH_NOTES):
+            return ["search-concept-expansion"]
+        if query_plan is None or query_plan.status not in (ApprovalStatus.APPROVED, ApprovalStatus.APPROVED_WITH_NOTES):
+            return ["database-query-plan"]
+        if screening_criteria is None or screening_criteria.status not in (ApprovalStatus.APPROVED, ApprovalStatus.APPROVED_WITH_NOTES):
+            return ["screening-criteria"]
+        if export_bundle is None or export_bundle.status not in (ApprovalStatus.APPROVED, ApprovalStatus.APPROVED_WITH_NOTES):
+            return ["strategy-export"]
+        return []
