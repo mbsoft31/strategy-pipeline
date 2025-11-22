@@ -247,12 +247,13 @@ npm run build
 ```
 
 ### Docker (Optional)
+
 ```dockerfile
 FROM node:18-alpine
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
-COPY . .
+COPY .. .
 RUN npm run build
 CMD ["npm", "run", "preview"]
 ```
