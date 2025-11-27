@@ -1,0 +1,238 @@
+# Stage 3 Implementation Complete ✅
+
+**Date:** November 21, 2025  
+**Stage:** Search Concept Expansion  
+**Status:** ✅ Implemented and Tested
+
+---
+
+## What Was Built
+
+### Stage 3: SearchConceptExpansionStage
+Generates `SearchConceptBlocks` from approved `ConceptModel` and `ResearchQuestionSet`. Each block contains:
+- **Label**: Concept name
+- **Description**: What this concept represents
+- **Terms Included**: Synonyms, variations, abbreviations
+- **Terms Excluded**: Ambiguous terms to filter out
+
+---
+
+## Files Created/Modified
+
+### Created
+1. **`src/stages/search_concept_expansion.py`** (77 lines)
+   - SearchConceptExpansionStage implementation
+   - Handles concept deserialization
+   - Validates prerequisites
+
+2. **`tests/test_stage3_search_expansion.py`** (62 lines)
+   - 3 test cases covering happy path, prerequisites, and term quality
+
+### Modified
+1. **`src/services/prompts.py`**
+   - Added PROMPT_STAGE3_SEARCH_EXPANSION with instructions for LLM
+
+2. **`src/services/simple_model_service.py`**
+   - Implemented `expand_search_terms` with heuristic logic
+   - Generates basic term variations (lowercase, plural, hyphenated)
+
+3. **`src/services/intelligent_model_service.py`**
+   - Implemented `expand_search_terms` with LLM + fallback
+   - Uses SYSTEM_PROMPT_LIBRARIAN persona
+   - Graceful degradation to heuristic if LLM fails
+
+4. **`src/controller.py`**
+   - Registered SearchConceptExpansionStage
+   - Updated imports
+   - Enhanced `get_next_available_stages` to gate Stage 3
+
+5. **`demo_full_pipeline.py`**
+   - Added Stage 3 execution and display
+   - Now covers Stages 0-3
+
+---
+
+## Implementation Details
+
+### SimpleModelService Approach (Heuristic)
+For each concept (up to 6):
+- Base term: concept label
+- Lowercase variant
+- Hyphenated variant
+- Plural form (if not already plural)
+- Deduplicates terms
+
+**Example Output:**
+```python
+Concept: "Large Language Models"
+Terms: ["Large Language Models", "large language models", 
+        "Large-Language-Models", "Large Language Modelss"]
+```
+
+### IntelligentModelService Approach (LLM-Driven)
+1. Formats concepts and research questions
+2. Sends to LLM with PROMPT_STAGE3_SEARCH_EXPANSION
+3. LLM generates comprehensive synonym lists
+4. Parses JSON response into SearchConceptBlock objects
+5. Falls back to heuristic if LLM fails
+
+**LLM Prompt Instructs:**
+- Generate synonyms and related terms
+- Include narrower/broader terms
+- Add common abbreviations
+- Identify terms to exclude
+- Return 3-8 blocks for main conceptual dimensions
+
+---
+
+## Example Output (From Demo)
+
+```
+[Stage 3] Generating SearchConceptBlocks...
+Generated 6 search concept blocks:
+ - GPT-3: 5 terms included
+   Terms: GPT-3, ChatGPT, Generative Pre-trained Transformer 3, GPT3, OpenAI GPT-3
+ - Clinical Decision Support Systems: 6 terms included
+   Terms: Clinical Decision Support Systems, CDSS, clinical decision support, decision support systems, medical decision support, clinical DSS
+ - Uncertainty Estimation: 4 terms included
+   Terms: Uncertainty Estimation, uncertainty quantification, confidence estimation, probabilistic estimation
+ - Retrieval Augmentation: 5 terms included
+   Terms: Retrieval Augmentation, retrieval-augmented generation, RAG, knowledge retrieval, augmented retrieval
+ - Validation Workflows: 4 terms included
+   Terms: Validation Workflows, validation processes, verification workflows, quality assurance workflows
+ - Hallucination Rates: 5 terms included
+   Terms: Hallucination Rates, hallucination frequency, factual error rates, fabrication rates, AI hallucinations
+```
+
+---
+
+## Test Results
+
+### Tests Created
+1. **test_search_expansion_stage_happy_path**
+   - Runs full pipeline through Stage 3
+   - Validates SearchConceptBlocks structure
+   - Checks all required fields present
+
+2. **test_search_expansion_requires_prior_artifacts**
+   - Ensures Stage 3 fails without approved Stage 1 & 2
+
+3. **test_search_expansion_terms_quality**
+   - Validates term variations are generated
+   - Ensures at least base term present
+
+### Test Status
+✅ All 3 tests passing
+
+---
+
+## Integration Points
+
+### Input Dependencies
+- **ConceptModel** (from Stage 1) - Must be approved
+- **ResearchQuestionSet** (from Stage 2) - Must be approved
+
+### Output Usage
+- **SearchConceptBlocks** → Stage 4 (DatabaseQueryPlan)
+  - Blocks will be combined into Boolean queries
+  - Terms used for database-specific syntax
+
+### Controller Gating
+Stage 3 only available after:
+1. ✅ ProjectContext approved
+2. ✅ ProblemFraming + ConceptModel approved
+3. ✅ ResearchQuestionSet approved
+
+---
+
+## Next Stage Preview
+
+**Stage 4: DatabaseQueryPlanStage**
+Will take SearchConceptBlocks and generate:
+- Database-specific Boolean queries
+- Query syntax for: PubMed, Scopus, Web of Science, arXiv, IEEE
+- Optional: Hit count estimates using SearchService
+
+**Estimated Implementation Time:** 2-3 hours
+
+---
+
+## Usage Examples
+
+### Programmatic
+```python
+from src.controller import PipelineController
+from src.services import IntelligentModelService, FilePersistenceService
+from src.models import SearchConceptBlocks
+
+controller = PipelineController(
+    model_service=IntelligentModelService(),
+    persistence_service=FilePersistenceService()
+)
+
+# After Stages 0-2 approved...
+result = controller.run_stage("search-concept-expansion", project_id=project_id)
+blocks: SearchConceptBlocks = result.draft_artifact
+
+for block in blocks.blocks:
+    print(f"{block.label}: {block.terms_included}")
+```
+
+### Run Demo
+```powershell
+python demo_full_pipeline.py
+```
+
+### Run Tests
+```powershell
+pytest tests/test_stage3_search_expansion.py -v
+```
+
+---
+
+## Pipeline Progress
+
+| Stage | Name | Status | Implementation |
+|-------|------|--------|----------------|
+| 0 | Project Setup | ✅ Complete | LLM + Heuristic |
+| 1 | Problem Framing | ✅ Complete | LLM + Critique + Validation |
+| 2 | Research Questions | ✅ Complete | LLM + Fallback |
+| 3 | Search Concept Expansion | ✅ Complete | LLM + Fallback |
+| 4 | Database Query Plan | ⏸️ Next | TBD |
+| 5 | Screening Criteria | ⏸️ Future | TBD |
+| 6 | Strategy Export | ⏸️ Future | TBD |
+
+**Overall Progress:** 4/7 stages (57%)
+
+---
+
+## Key Learnings
+
+### What Worked Well
+1. **Reusable pattern** - Stage implementation follows consistent structure
+2. **Graceful degradation** - LLM failures don't break the pipeline
+3. **Concept deserialization** - Fixed dict-to-dataclass issue proactively
+4. **Test-first approach** - Tests caught issues early
+
+### Technical Notes
+1. **Synonym quality** - LLM-generated synonyms are much richer than heuristic
+2. **Term variations** - Important for comprehensive literature search
+3. **Excluded terms** - Future enhancement: auto-suggest ambiguous exclusions
+4. **Block count** - 3-8 blocks balances comprehensiveness vs. query complexity
+
+---
+
+## Documentation Updated
+- ✅ Stage implementation file
+- ✅ Service method implementations
+- ✅ Controller registration
+- ✅ Demo script
+- ✅ Test suite
+- ✅ This summary document
+
+---
+
+**Status:** ✅ Stage 3 complete and ready for production use!  
+**Next Action:** Implement Stage 4 (DatabaseQueryPlan) when ready  
+**Estimated Time for Stage 4:** 2-3 hours
+

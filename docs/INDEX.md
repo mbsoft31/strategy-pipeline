@@ -1,318 +1,175 @@
-# Documentation Index
+# Strategy Pipeline Documentation
 
-**Last Updated:** November 21, 2025
+Production-ready systematic literature review pipeline with LLM-powered search strategy generation and anti-hallucination query validation.
 
-This document provides a complete overview of the project documentation, organized by category.
+## 🚀 Quick Links
 
----
+- 📚 [Getting Started](getting-started/quick-start.md) - 5-minute tutorial
+- 📖 [User Guide](user-guide/quick-reference.md) - Comprehensive reference
+- 🏗️ [Architecture](architecture/overview.md) - System design
+- 🔌 [API Reference](api-reference/index.md) - Auto-generated API docs
+- 💻 [Development](development/contributing.md) - Contributing guide
+- 📝 [Examples](examples/) - Code examples
 
-## Quick Start
+## ✨ Features
 
-- **README.md** (root) - Main project overview and setup instructions
-- **IMPLEMENTATION_STATUS.md** - Current implementation progress (5/7 stages)
+- ✅ **8-stage pipeline** - From research question to exportable papers
+- ✅ **Anti-hallucination engine** - Validated boolean query generation
+- ✅ **4 database integrations** - arXiv, OpenAlex, Crossref, Semantic Scholar
+- ✅ **Auto-deduplication** - DOI + title similarity matching
+- ✅ **Multi-format export** - CSV, BibTeX, RIS for citation managers
+- ✅ **PRISMA-compliant** - Publication-ready protocols
+- ✅ **Deterministic screening** - PICO-based inclusion/exclusion criteria
+- ✅ **Production-ready** - Comprehensive tests and error handling
 
----
+## 📦 Installation
 
-## Documentation Structure
+```bash
+# Clone repository
+git clone https://github.com/mbsoft31/strategy-pipeline.git
+cd strategy-pipeline
 
-### 📋 **Stages/** - Stage Implementation Documentation
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
 
-Complete documentation for each pipeline stage:
-
-- **STAGE3_COMPLETE.md** - SearchConceptExpansion stage (✅ Complete)
-- **STAGE3_DEBUG_FIX.md** - Debug logging and error fixes for Stage 3
-- **STAGE4_COMPLETE.md** - DatabaseQueryPlan stage (✅ Complete)
-- **STAGE4_REVISION_PLAN.md** - Revision plan identifying 10 improvement areas
-- **STAGE4_REVISION_COMPLETE.md** - Final revision with complexity analysis + NOT operator fixes
-- **STAGE5_PLACEHOLDER.md** - ScreeningCriteria stage (🚧 Scaffolding)
-- **STAGE6_PLACEHOLDER.md** - StrategyExport stage (🚧 Scaffolding)
-
-**Current Status:** Stages 0-4 complete (57% of pipeline)
-
----
-
-### 📈 **Sprints/** - Sprint Progress & Summaries
-
-Historical sprint documentation tracking implementation progress:
-
-- **SPRINT1_SUMMARY.md** - Foundation phase (Stages 0-2)
-- **SPRINT2_COMPLETE.md** - Problem framing and research questions
-- **SPRINT2_FINAL_SUMMARY.md** - Stage 2 completion summary
-- **SPRINT2_QUICKSTART.md** - Stage 2 quick reference
-- **SPRINT3_COMPLETE.md** - Search concept expansion (Stage 3)
-- **SPRINT3_QUICKSTART.md** - Stage 3 quick reference
-- **SPRINT4_PHASE1_COMPLETE.md** - Stage 4 initial implementation
-- **SPRINT4_QUICKSTART.md** - Stage 4 quick reference
-- **SPRINT4_REFERENCE.md** - Technical reference for Stage 4
-- **SPRINT4_SUMMARY.md** - Stage 4 completion summary
-- **SPRINT5_COMPLETE.md** - Anti-Hallucination layer integration
-
----
-
-### 📋 **Plans/** - Implementation Plans & Prompts
-
-Detailed implementation plans for future stages and features:
-
-- **plan-databaseQueryPlan.prompt.md** - Stage 4 comprehensive plan
-- **plan-enhancedHitlPipeline.prompt.md** - Enhanced HITL pipeline planning
-- **plan-hitlPipelineNextSteps.prompt.md** - HITL next steps
-- **plan-llmIntegrationWithValidation.prompt.md** - LLM integration strategy
-- **plan-slrIntegration.prompt.md** - Systematic Literature Review integration
-
----
-
-### 🔧 **Guides/** - Technical Guides & References
-
-Implementation guides and technical references:
-
-- **DEPLOYMENT_GUIDE.md** - Deployment instructions and best practices
-- **DIALECT_EXAMPLES.md** - Search syntax examples for different databases
-- **DIALECT_EXTENSION_SUMMARY.md** - Guide for extending database dialects
-- **guide-phase1Foundation.prompt.md** - Phase 1 foundation guide
-- **OPENROUTER_GUIDE.md** - OpenRouter API setup and usage
-- **OPENROUTER_INTEGRATION.md** - OpenRouter integration details
-
----
-
-### 📚 **Archive/** - Historical Documentation
-
-Older documentation kept for reference:
-
-- **DAY1_COMPLETE.md** - Initial day progress
-- **DAY1_EXECUTION_SUMMARY.md** - Day 1 summary
-- **DAY2_QUICKSTART.md** - Day 2 quick start
-- **GIT_COMMIT_SUMMARY.md** - Git commit history summary
-- **README_FULL.md** - Older comprehensive README
-- **WHATS_NEXT.md** - Previous next steps document
-
----
-
-## Root Documentation Files
-
-### Main Reference Documents
-
-```
-README.md                     - Project overview, setup, quick start
-PROJECT_STATUS.md             - Overall project status and metrics
-IMPLEMENTATION_STATUS.md      - Detailed implementation progress (5/7 stages)
+# Install dependencies
+pip install -r requirements.txt
 ```
 
----
+See [Installation Guide](getting-started/installation.md) for detailed setup.
 
-## Project Structure Overview
+## ⚡ Quick Example
+
+```python
+from src.controller import PipelineController
+from src.services import IntelligentModelService, FilePersistenceService
+
+# Initialize controller
+controller = PipelineController(
+    IntelligentModelService(),
+    FilePersistenceService(base_dir="./data")
+)
+
+# Start project
+result = controller.start_project(
+    "Systematic review of LLM hallucination mitigation techniques"
+)
+project_id = result.draft_artifact.id
+
+# Run all stages
+stages = [
+    "problem-framing",
+    "research-questions",
+    "search-concept-expansion",
+    "database-query-plan",
+    "screening-criteria",
+    "query-execution",
+    "strategy-export"
+]
+
+for stage in stages:
+    result = controller.run_stage(stage, project_id=project_id)
+    controller.approve_artifact(
+        project_id,
+        result.draft_artifact.__class__.__name__
+    )
+
+# Access results
+print(f"Results: data/{project_id}/export/")
+# - papers.csv (Excel-ready screening)
+# - papers.bib (Zotero/Mendeley)
+# - papers.ris (EndNote)
+# - STRATEGY_PROTOCOL.md (PRISMA protocol)
+```
+
+## 📊 Pipeline Stages
+
+| Stage | Name | Function |
+|-------|------|----------|
+| 0 | Project Setup | Initialize project context |
+| 1 | Problem Framing | Extract PICO elements |
+| 2 | Research Questions | Generate research questions |
+| 3 | Concept Expansion | Expand keywords (MeSH/synonyms) |
+| 4 | Database Query Plan | Generate validated boolean queries |
+| 5 | Screening Criteria | PICO-based inclusion/exclusion |
+| 7 | Query Execution | Execute searches, retrieve papers |
+| 6 | Strategy Export | Export to CSV/BibTeX/RIS |
+
+## 🎯 Use Cases
+
+- **Academic Researchers** - Systematic literature reviews
+- **Research Teams** - Collaborative review workflows
+- **Meta-Analysts** - Evidence synthesis
+- **PhD Students** - Dissertation research
+- **Research Librarians** - Search strategy development
+
+## 🏗️ Architecture
 
 ```
-strategy-pipeline/
-├── docs/                     # 📚 Documentation (this folder)
-│   ├── stages/              # Stage-specific documentation
-│   ├── sprints/             # Sprint progress tracking
-│   ├── plans/               # Implementation plans
-│   ├── guides/              # Technical guides
-│   ├── archive/             # Historical docs
-│   ├── IMPLEMENTATION_STATUS.md
-│   ├── PROJECT_STATUS.md
-│   └── INDEX.md            # This file
-│
-├── src/                      # Source code
-│   ├── stages/              # Pipeline stages (0-4 complete)
-│   ├── services/            # LLM, model, and utility services
-│   ├── search/              # Anti-Hallucination syntax engine
-│   └── utils/               # Utilities and exceptions
-│
-├── tests/                    # Test suite (comprehensive)
-├── scripts/                  # Demo and utility scripts
-├── interfaces/               # CLI and web app interfaces
-├── static/ & templates/      # Web UI assets
-│
-└── [Configuration Files]
-    ├── .env                  # Environment configuration
-    ├── requirements.txt      # Python dependencies
-    ├── pytest.ini           # Pytest configuration
-    └── README.md            # Main README
+┌─────────────────┐
+│  User Input     │
+│  (Research Q)   │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│ PipelineController │ ◄── Facade Pattern
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│ StageOrchestrator│ ◄── Stages 0-7
+└────────┬────────┘
+         │
+    ┌────┴────┬────────┬──────────┐
+    ▼         ▼        ▼          ▼
+┌────────┐ ┌────┐ ┌────────┐ ┌────────┐
+│LLM Svc │ │Persist│ │Search  │ │Syntax  │
+│        │ │Svc    │ │Service │ │Engine  │
+└────────┘ └────┘ └────────┘ └────────┘
+                      │
+                      ▼
+              ┌───────────────┐
+              │ 4 Databases   │
+              │ (arXiv, etc.) │
+              └───────────────┘
 ```
 
----
+See [Architecture Overview](architecture/overview.md) for details.
 
-## Key Metrics
+## 📚 Documentation Structure
 
-| Metric | Value |
-|--------|-------|
-| **Stages Complete** | 5 / 7 (71%) |
-| **Progress** | Stages 0-4 ✅ |
-| **Test Coverage** | Comprehensive |
-| **Documentation** | 35+ files |
-| **Sprints Completed** | 5 |
-| **Latest Update** | Stage 4 revision |
+```
+docs/
+├── getting-started/     # Setup and tutorials
+├── user-guide/          # Usage guides
+├── architecture/        # System design
+├── api-reference/       # Auto-generated API docs
+├── development/         # Contributing guides
+└── examples/            # Code examples
+```
 
----
+## 🤝 Support
 
-## Current Implementation Status
+- 🐛 [Report Issues](https://github.com/mbsoft31/strategy-pipeline/issues)
+- 💬 [Discussions](https://github.com/mbsoft31/strategy-pipeline/discussions)
+- 📧 Email: bekhouche.mouadh@univ-oeb.dz
 
-### ✅ Completed Stages
+## 📄 License
 
-**Stage 0: Project Setup** (✅)
-- LLM-powered project context generation
-- Comprehensive input validation
+MIT License - See LICENSE file for details.
 
-**Stage 1: Problem Framing** (✅)
-- Critique loop (Draft → Critique → Refine)
-- OpenAlex validation of concepts
-- Risk assessment and feasibility scoring
+## 🙏 Acknowledgments
 
-**Stage 2: Research Questions** (✅)
-- PICO-based question generation
-- Linked concept tracking
-- Methodological lens integration
-
-**Stage 3: Search Concept Expansion** (✅)
-- LLM-powered synonym generation
-- Graceful fallback to heuristic expansion
-- Included/excluded term handling
-
-**Stage 4: Database Query Plan** (✅)
-- Database-specific Boolean query generation
-- **NEW:** Complexity analysis (6 levels)
-- **NEW:** Enhanced NOT operator formatting
-- **NEW:** Empty block validation
-- Hit count estimation support
-
-### ⏳ Future Stages
-
-**Stage 5: Screening Criteria** - Next
-- Inclusion/exclusion criteria generation
-- PICO-based criterion formulation
-- Study design and quality filters
-
-**Stage 6: Strategy Export** - Future
-- Markdown/PDF output generation
-- Complete strategy documentation
-- Execution blueprints
+Built with:
+- OpenAI/Anthropic LLMs for intelligent query generation
+- OpenAlex, arXiv, Crossref, Semantic Scholar APIs
+- PRISMA guidelines for systematic reviews
 
 ---
 
-## Anti-Hallucination Features
+**Version:** 1.0  
+**Last Updated:** November 27, 2025  
+**Status:** Production Ready ✅
 
-The project implements multiple layers of anti-hallucination protection:
-
-### Layer 1: Deterministic Syntax Engine
-- Database-specific dialect system
-- Guaranteed valid Boolean query syntax
-- Field-tag validation (PubMed MeSH, Scopus TITLE-ABS-KEY, etc.)
-
-### Layer 2: LLM Validation
-- Detects hallucinated operators (NEAR, ADJ, PROX)
-- Database-specific syntax checking
-- Character limit warnings
-
-### Layer 3: Graceful Fallback
-- LLM → Validation → Syntax Engine
-- Always produces valid output
-- Clear error messages with guidance
-
----
-
-## Getting Started with Documentation
-
-### For New Contributors
-
-1. Start with **README.md** in root
-2. Review **PROJECT_STATUS.md** for current progress
-3. Check relevant **stages/** doc for your area
-4. Reference **guides/** for technical implementation details
-
-### For Continuing Development
-
-1. Read **IMPLEMENTATION_STATUS.md** for what's complete
-2. Review **STAGE4_REVISION_COMPLETE.md** for latest improvements
-3. Check **plans/** for next stage details
-4. Use **sprints/** for historical context
-
-### For Deployment
-
-1. Follow **DEPLOYMENT_GUIDE.md** in guides/
-2. Reference **OPENROUTER_GUIDE.md** for LLM setup
-3. Review environment configuration in root .env.example
-
----
-
-## Documentation Best Practices
-
-### Adding New Documentation
-
-1. **Stage docs**: Use `STAGE{N}_COMPLETE.md` format
-2. **Plans**: Use `plan-{camelCaseName}.prompt.md` format
-3. **Guides**: Use descriptive names in `guides/` folder
-4. **Updates**: Always include date and status badge
-
-### Organization Rules
-
-- **Root level**: Only main README.md and config files
-- **docs/stages/**: Stage-specific implementation docs
-- **docs/sprints/**: Sprint tracking and progress
-- **docs/plans/**: Future implementation plans
-- **docs/guides/**: Technical and deployment guides
-- **docs/archive/**: Old or superseded documentation
-
----
-
-## Version History
-
-### Latest Updates (November 21, 2025)
-
-- ✅ Stage 4 revision complete with complexity analysis
-- ✅ Anti-Hallucination layer fully integrated
-- ✅ 5/7 pipeline stages implemented
-- ✅ Documentation reorganized and indexed
-- ✅ Repository cleaned up
-
-### Previous Major Updates
-
-- Sprint 5: Anti-Hallucination layer integration
-- Sprint 4: Database query plan stage
-- Sprint 3: Search concept expansion
-- Sprint 2: Problem framing & research questions
-- Sprint 1: Foundation (Project setup)
-
----
-
-## Quick Reference Links
-
-### Essential Files
-
-- [README.md](../README.md) - Main project overview
-- [PROJECT_STATUS.md](PROJECT_STATUS.md) - Project metrics
-- [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) - Progress tracking
-
-### Latest Stage Documentation
-
-- [STAGE4_REVISION_COMPLETE.md](stages/STAGE4_REVISION_COMPLETE.md) - Latest improvements
-- [STAGE4_COMPLETE.md](stages/STAGE4_COMPLETE.md) - Full stage documentation
-- [STAGE3_COMPLETE.md](stages/STAGE3_COMPLETE.md) - Search expansion
-
-### Quick Starts
-
-- [SPRINT4_QUICKSTART.md](sprints/SPRINT4_QUICKSTART.md) - Stage 4 quick reference
-- [SPRINT3_QUICKSTART.md](sprints/SPRINT3_QUICKSTART.md) - Stage 3 quick reference
-
-### Setup Guides
-
-- [DEPLOYMENT_GUIDE.md](guides/DEPLOYMENT_GUIDE.md) - Deployment instructions
-- [OPENROUTER_GUIDE.md](guides/OPENROUTER_GUIDE.md) - LLM API setup
-
----
-
-## Contributing
-
-When working on the project:
-
-1. Update relevant stage documentation
-2. Create new plan doc if adding features
-3. Keep status documents current
-4. Move completed items to archive
-5. Update this INDEX.md
-
----
-
-**Documentation organized and maintained with ❤️**
-
-For questions or updates needed, see the main README.md in the project root.

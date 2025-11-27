@@ -1,0 +1,117 @@
+site_name: Strategy Pipeline
+copyright: Copyright &copy; 2025 Bekhouche Mouadh
+
+      link: mailto:bekhouche.mouadh@univ-oeb.dz
+    - icon: fontawesome/solid/envelope
+      link: https://github.com/mbsoft31/strategy-pipeline
+    - icon: fontawesome/brands/github
+  social:
+    provider: mike
+  version:
+extra:
+
+      - Overview: examples/README.md
+  - Examples:
+
+      - Stage 7 Implementation: development/stage-7-implementation.md
+      - Stage 5 Notes: development/stage-5-notes.md
+      - Testing: development/testing.md
+      - Contributing: development/contributing.md
+  - Development:
+
+      - REST API: api-reference/rest-api.md
+      - Overview: api-reference/index.md
+  - API Reference:
+
+      - Frontend: architecture/frontend.md
+      - Components: architecture/components.md
+      - Pipeline Design: architecture/pipeline-design.md
+      - Overview: architecture/overview.md
+  - Architecture:
+
+      - Verification Checklist: user-guide/verification-checklist.md
+      - Navigation Guide: user-guide/navigation.md
+      - Quick Reference: user-guide/quick-reference.md
+  - User Guide:
+
+      - Configuration: getting-started/configuration.md
+      - Installation: getting-started/installation.md
+      - Quick Start: getting-started/quick-start.md
+  - Getting Started:
+
+  - Home: index.md
+nav:
+
+  - md_in_html
+  - attr_list
+  - tables
+      permalink: true
+  - toc:
+      custom_checkbox: true
+  - pymdownx.tasklist:
+      alternate_style: true
+  - pymdownx.tabbed:
+  - pymdownx.snippets
+  - pymdownx.inlinehilite
+      anchor_linenums: true
+  - pymdownx.highlight:
+          format: !!python/name:pymdownx.superfences.fence_code_format
+          class: mermaid
+        - name: mermaid
+      custom_fences:
+  - pymdownx.superfences:
+  - pymdownx.details
+  - admonition
+markdown_extensions:
+
+            show_signature_annotations: true
+            separate_signature: true
+            members_order: source
+            show_category_heading: true
+            show_root_heading: true
+            show_source: true
+            docstring_style: google
+          options:
+        python:
+      handlers:
+  - mkdocstrings:
+  - search
+plugins:
+
+    repo: fontawesome/brands/github
+  icon:
+    - content.code.copy
+    - search.highlight
+    - search.suggest
+    - toc.follow
+    - navigation.top
+    - navigation.expand
+    - navigation.sections
+    - navigation.tabs
+    - navigation.tracking
+    - navigation.instant
+  features:
+        name: Switch to light mode
+        icon: material/brightness-4
+      toggle:
+      accent: indigo
+      primary: indigo
+    - scheme: slate
+        name: Switch to dark mode
+        icon: material/brightness-7
+      toggle:
+      accent: indigo
+      primary: indigo
+    - scheme: default
+  palette:
+  name: material
+theme:
+
+edit_uri: edit/main/docs/
+repo_url: https://github.com/mbsoft31/strategy-pipeline
+repo_name: mbsoft31/strategy-pipeline
+
+site_url: https://mbsoft31.github.io/strategy-pipeline
+site_author: Bekhouche Mouadh
+site_description: Production-ready systematic literature review pipeline with LLM-powered search strategy generation
+
