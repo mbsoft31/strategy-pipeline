@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { toast } from '@/components/ui/toast'
 import { ArtifactViewer } from '@/components/ArtifactViewer'
-import { useArtifact, useApproveStage, useRunStage } from '@/lib/api/hooks'
+import { useArtifact, useApproveArtifact, useRunStage } from '@/lib/hooks'
 
 const STAGE_CONFIG: Record<string, { title: string; description: string; artifactType: string }> = {
   'project-setup': {
@@ -50,12 +50,12 @@ export default function StageView() {
   const { data: artifact, isLoading, error, refetch } = useArtifact(projectId, stageConfig.artifactType)
 
   // Mutations
-  const runStage = useRunStage()
-  const approveStage = useApproveStage()
+  const runStage = useRunStage(projectId)
+  const approveArtifact = useApproveArtifact(projectId)
 
   const handleRunStage = async () => {
     try {
-      await runStage.mutateAsync({ projectId, stageName })
+      await runStage.mutateAsync({ stageName, inputs: {} })
       await refetch()
       toast.success('Stage executed!', 'Review the generated content below')
     } catch (error: any) {
@@ -66,11 +66,10 @@ export default function StageView() {
 
   const handleApprove = async () => {
     try {
-      await approveStage.mutateAsync({
-        projectId,
+      await approveArtifact.mutateAsync({
         stageName,
         edits: {},
-        userNotes: undefined,
+        notes: undefined,
       })
 
       toast.success('Stage approved!', 'Moving to next stage')
@@ -228,9 +227,9 @@ export default function StageView() {
 
             <Button
               onClick={handleApprove}
-              disabled={approveStage.isPending}
+              disabled={approveArtifact.isPending}
             >
-              {approveStage.isPending ? (
+              {approveArtifact.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Approving...

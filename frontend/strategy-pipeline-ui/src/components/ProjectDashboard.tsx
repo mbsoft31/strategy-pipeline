@@ -9,13 +9,13 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { useProjects } from '@/lib/api/hooks'
+import { useProjects } from '@/lib/hooks'
+import type { ApprovalStatus } from '@/lib/api/types'
 import NewProjectDialog from './NewProjectDialog'
-import type { Project } from '@/types/project'
 
 export default function ProjectDashboard() {
   const [searchQuery, setSearchQuery] = useState('')
-  const [filterStatus, setFilterStatus] = useState<'all' | 'draft' | 'in_progress' | 'completed'>('all')
+  const [filterStatus, setFilterStatus] = useState<'all' | ApprovalStatus>('all')
   const [showNewProject, setShowNewProject] = useState(false)
 
   const { data: projects, isLoading, error } = useProjects()
@@ -27,16 +27,26 @@ export default function ProjectDashboard() {
     return matchesSearch && matchesFilter
   }) || []
 
-  const getStatusBadge = (status: Project['status']) => {
-    const variants = {
-      draft: 'outline',
-      in_progress: 'warning',
-      completed: 'success',
-    } as const
+  const getStatusBadge = (status: ApprovalStatus) => {
+    const variants: Record<ApprovalStatus, string> = {
+      'DRAFT': 'outline',
+      'UNDER_REVIEW': 'warning',
+      'APPROVED': 'success',
+      'APPROVED_WITH_NOTES': 'success',
+      'REQUIRES_REVISION': 'destructive',
+    }
+
+    const labels: Record<ApprovalStatus, string> = {
+      'DRAFT': 'Draft',
+      'UNDER_REVIEW': 'In Progress',
+      'APPROVED': 'Completed',
+      'APPROVED_WITH_NOTES': 'Completed',
+      'REQUIRES_REVISION': 'Needs Revision',
+    }
 
     return (
-      <Badge variant={variants[status]}>
-        {status.replace('_', ' ').toUpperCase()}
+      <Badge variant={variants[status] as any}>
+        {labels[status]}
       </Badge>
     )
   }
@@ -69,13 +79,16 @@ export default function ProjectDashboard() {
           />
         </div>
         <div className="flex gap-2">
-          {(['all', 'draft', 'in_progress', 'completed'] as const).map((status) => (
+          {(['all', 'DRAFT', 'UNDER_REVIEW', 'APPROVED'] as const).map((status) => (
             <Button
               key={status}
               variant={filterStatus === status ? 'default' : 'outline'}
-              onClick={() => setFilterStatus(status)}
+              onClick={() => setFilterStatus(status as typeof filterStatus)}
             >
-              {status === 'all' ? 'All' : status.replace('_', ' ')}
+              {status === 'all' ? 'All' :
+               status === 'DRAFT' ? 'Draft' :
+               status === 'UNDER_REVIEW' ? 'In Progress' :
+               'Completed'}
             </Button>
           ))}
         </div>
@@ -130,8 +143,8 @@ export default function ProjectDashboard() {
                         {project.title}
                       </Link>
                     </CardTitle>
-                    {project.description && (
-                      <CardDescription>{project.description}</CardDescription>
+                    {project.short_description && (
+                      <CardDescription>{project.short_description}</CardDescription>
                     )}
                   </div>
                   {getStatusBadge(project.status)}

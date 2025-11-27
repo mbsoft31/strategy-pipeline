@@ -8,7 +8,7 @@ import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
-import { useCreateProject } from '@/lib/api/hooks'
+import { useCreateProject } from '@/lib/hooks'
 
 interface NewProjectDialogProps {
   open: boolean
@@ -28,7 +28,7 @@ export default function NewProjectDialog({ open, onOpenChange }: NewProjectDialo
     }
 
     try {
-      const result = await createProject.mutateAsync(rawIdea)
+      const result = await createProject.mutateAsync({ raw_idea: rawIdea })
       onOpenChange(false)
       setRawIdea('')
       navigate({ to: '/projects/$projectId', params: { projectId: result.project_id } })

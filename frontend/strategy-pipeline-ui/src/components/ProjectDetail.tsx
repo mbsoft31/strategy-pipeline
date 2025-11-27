@@ -7,7 +7,7 @@ import { ArrowLeft, Loader2, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { StageTimeline } from '@/components/StageTimeline'
-import { useProject } from '@/lib/api/hooks'
+import { useProject } from '@/lib/hooks'
 
 const STAGES = [
   {
@@ -100,8 +100,8 @@ export default function ProjectDetail() {
       {/* Project Header */}
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-2">{project.title}</h1>
-        {project.description && (
-          <p className="text-lg text-muted-foreground">{project.description}</p>
+        {project.short_description && (
+          <p className="text-lg text-muted-foreground">{project.short_description}</p>
         )}
       </div>
 
@@ -109,7 +109,7 @@ export default function ProjectDetail() {
       <StageTimeline
         projectId={projectId}
         stages={STAGES}
-        currentStage={project.current_stage || 0}
+        currentStage={project.current_stage ? parseInt(project.current_stage, 10) : 0}
       />
     </div>
   )
