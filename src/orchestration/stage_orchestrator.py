@@ -57,6 +57,7 @@ class StageOrchestrator:
         self.register_stage("research-questions", ResearchQuestionStage)
         self.register_stage("search-concept-expansion", SearchConceptExpansionStage)
         self.register_stage("database-query-plan", DatabaseQueryPlanStage)
+        self.register_stage("query-execution", QueryExecutionStage)
         self.register_stage("screening-criteria", ScreeningCriteriaStage)
         self.register_stage("strategy-export", StrategyExportStage)
 
