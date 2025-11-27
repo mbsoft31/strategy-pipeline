@@ -118,3 +118,6 @@ pyrightconfig.json
 # CI/CD
 .github/workflows/local*.yml
 
+
+.gemini/
+gha-creds-*.json
