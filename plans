@@ -1,0 +1,579 @@
+# Stage 4 Implementation Plan: Database Query Plan
+
+**Stage:** 4 (DatabaseQueryPlan)  
+**Date:** November 21, 2025  
+**Status:** 📋 Planning Phase  
+**Estimated Time:** 2-3 hours
+
+---
+
+## Overview
+
+**Objective:** Transform `SearchConceptBlocks` into executable database-specific Boolean queries for multiple academic databases.
+
+**Input:** Approved `SearchConceptBlocks` (from Stage 3)  
+**Output:** `DatabaseQueryPlan` with database-specific queries  
+**Dependencies:** SearchService (for optional hit count estimates)
+
+---
+
+## Stage 4 Scope
+
+### What Stage 4 Does
+
+1. **Takes search concept blocks** (synonym groups) from Stage 3
+2. **Generates database-specific Boolean queries** for:
+   - **Executable databases:** OpenAlex, arXiv, Crossref, Semantic Scholar (via SearchService)
+   - **Syntax-only databases:** PubMed, Scopus, Web of Science (copy/paste)
+3. **Combines blocks** using Boolean operators (AND, OR, NOT)
+4. **Applies database-specific syntax** (e.g., MeSH terms for PubMed, field codes for Scopus)
+5. **Optionally estimates hit counts** using SearchService.execute_search()
+6. **Stores queries** in DatabaseQueryPlan artifact
+
+### What Stage 4 Does NOT Do
+
+- ❌ Execute searches (that's for separate execution workflow)
+- ❌ Download papers (that's post-query execution)
+- ❌ Screen results (that's Stage 5)
+- ❌ Validate query syntax (LLM generates, human reviews)
+
+---
+
+## Data Model Review
+
+### Input: SearchConceptBlocks
+
+```python
+@dataclass
+class SearchConceptBlock:
+    id: str
+    label: str
+    description: Optional[str]
+    terms_included: List[str]  # Synonyms, variations
+    terms_excluded: List[str]   # Terms to filter out
+```
+
+**Example from Stage 3:**
+```python
+SearchConceptBlock(
+    id="block_123",
+    label="Clinical Decision Support Systems",
+    terms_included=["clinical decision support systems", "CDSS", "AI in healthcare"],
+    terms_excluded=["non-clinical applications"]
+)
+```
+
+### Output: DatabaseQueryPlan
+
+```python
+@dataclass
+class DatabaseQuery:
+    id: str
+    database_name: str
+    query_blocks: List[str]           # Block IDs used
+    boolean_query_string: str         # Final executable query
+    notes: Optional[str]
+    hit_count_estimate: Optional[int] # From SearchService
+
+@dataclass
+class DatabaseQueryPlan:
+    project_id: str
+    queries: List[DatabaseQuery]
+    created_at: datetime
+    updated_at: datetime
+    status: ApprovalStatus
+    model_metadata: Optional[ModelMetadata]
+```
+
+**Example Output:**
+```python
+DatabaseQuery(
+    id="query_openalex_1",
+    database_name="openalex",
+    query_blocks=["block_123", "block_456"],
+    boolean_query_string='("clinical decision support" OR CDSS) AND (hallucination OR "fabricated information")',
+    hit_count_estimate=1250
+)
+```
+
+---
+
+## Implementation Strategy
+
+### Approach 1: LLM-Driven Query Generation (Recommended)
+
+**Advantages:**
+- ✅ Database-specific expertise (knows MeSH, field codes, etc.)
+- ✅ Handles complex Boolean logic
+- ✅ Can suggest database-specific optimizations
+
+**Prompt Structure:**
+```
+You are a Research Librarian expert in database search syntax.
+
+Concept Blocks:
+- Block 1: Clinical Decision Support [CDSS, clinical decision support systems, ...]
+- Block 2: Hallucination [hallucination, fabricated information, ...]
+
+Generate queries for: OpenAlex, PubMed, Scopus
+
+Return JSON:
+{
+  "queries": [
+    {
+      "database": "openalex",
+      "query": "...",
+      "notes": "Using title and abstract fields"
+    },
+    {
+      "database": "pubmed",
+      "query": "...",
+      "notes": "Using MeSH terms where applicable"
+    }
+  ]
+}
+```
+
+**Fallback:** Template-based generation if LLM fails
+
+### Approach 2: Template-Based Generation (Fallback)
+
+**Simple heuristic:**
+```python
+# For OpenAlex (simple keyword search)
+query = " AND ".join([
+    f"({' OR '.join(block.terms_included)})"
+    for block in blocks
+])
+
+# For PubMed (with field codes)
+query = " AND ".join([
+    f"({' OR '.join([f'{term}[tiab]' for term in block.terms_included])})"
+    for block in blocks
+])
+```
+
+---
+
+## Database-Specific Syntax Requirements
+
+### OpenAlex
+- **Syntax:** Simple keyword search with Boolean operators
+- **Fields:** `title`, `abstract`, `concepts`
+- **Example:** `hallucination AND "clinical decision support"`
+- **Executable:** ✅ Yes (via SearchService)
+
+### arXiv
+- **Syntax:** Field-based search (`ti:`, `abs:`, `au:`)
+- **Example:** `ti:hallucination AND abs:"language model"`
+- **Executable:** ✅ Yes (via SearchService)
+
+### PubMed
+- **Syntax:** MeSH terms + field tags (`[tiab]`, `[mesh]`)
+- **Example:** `(hallucination[tiab] OR "false information"[tiab]) AND decision support systems[mesh]`
+- **Executable:** ❌ Syntax-only (copy/paste to PubMed UI)
+- **MeSH Terms:** LLM can suggest, human validates
+
+### Scopus
+- **Syntax:** Field codes (`TITLE-ABS-KEY`, `AUTH`, `PUBYEAR`)
+- **Example:** `TITLE-ABS-KEY(hallucination AND "language model") AND PUBYEAR > 2020`
+- **Executable:** ❌ Syntax-only (requires API key)
+
+### Web of Science
+- **Syntax:** Field tags (`TS=`, `TI=`, `AU=`)
+- **Example:** `TS=(hallucination AND "clinical decision") AND PY=2020-2025`
+- **Executable:** ❌ Syntax-only (requires API key)
+
+### Semantic Scholar
+- **Syntax:** Simple keyword search
+- **Example:** `hallucination clinical decision support`
+- **Executable:** ✅ Yes (via SearchService)
+
+---
+
+## Stage 4 Implementation Plan
+
+### File Structure
+
+**New Files:**
+1. `src/stages/database_query_plan.py` - Stage 4 implementation
+2. `src/services/prompts.py` - Add PROMPT_STAGE4_QUERY_GENERATION
+3. `tests/test_stage4_query_plan.py` - Tests
+
+**Modified Files:**
+1. `src/services/simple_model_service.py` - Implement build_database_queries
+2. `src/services/intelligent_model_service.py` - Implement build_database_queries with LLM
+3. `src/controller.py` - Register Stage 4
+4. `demo_full_pipeline.py` - Add Stage 4 execution
+5. `scripts/strategy.ipynb` - Add Stage 4 cell
+
+---
+
+## Detailed Implementation Steps
+
+### Step 1: Create Stage Class
+
+**File:** `src/stages/database_query_plan.py`
+
+```python
+class DatabaseQueryPlanStage(BaseStage):
+    def execute(self, *, project_id: str, target_databases: Optional[List[str]] = None, **kwargs):
+        # Load SearchConceptBlocks
+        blocks = load_artifact("SearchConceptBlocks", project_id)
+        
+        # Default databases if not specified
+        if not target_databases:
+            target_databases = ["openalex", "arxiv", "pubmed", "scopus"]
+        
+        # Generate queries via ModelService
+        plan, meta = self.model_service.build_database_queries(blocks, target_databases)
+        
+        # Optional: Estimate hit counts for executable databases
+        if kwargs.get("estimate_hits", False):
+            plan = self._estimate_hit_counts(plan)
+        
+        # Persist
+        self.persistence_service.save_artifact(plan, project_id, "DatabaseQueryPlan")
+        
+        return StageResult(...)
+```
+
+### Step 2: Add LLM Prompt
+
+**File:** `src/services/prompts.py`
+
+```python
+PROMPT_STAGE4_QUERY_GENERATION = """Generate database-specific search queries from concept blocks.
+
+Concept Blocks:
+{blocks}
+
+Target Databases: {databases}
+
+For each database, construct a Boolean query that:
+1. Combines blocks using AND (between blocks) and OR (within block terms)
+2. Uses database-specific syntax (field codes, MeSH terms, etc.)
+3. Excludes terms marked as excluded
+4. Is executable/copy-pasteable
+
+Database Syntax Guide:
+- OpenAlex: Simple keywords ("term1" OR term2) AND ("term3" OR term4)
+- PubMed: MeSH terms + field tags [tiab], [mesh], [au]
+- Scopus: TITLE-ABS-KEY() syntax
+- arXiv: Field prefixes ti:, abs:, au:
+- Web of Science: TS=(), TI=(), AU=() syntax
+
+Return JSON:
+{
+  "queries": [
+    {
+      "database": "openalex",
+      "query": "full Boolean query string",
+      "blocks_used": ["block_id1", "block_id2"],
+      "notes": "any database-specific notes or MeSH suggestions"
+    }
+  ]
+}
+"""
+```
+
+### Step 3: Implement Simple Model Service
+
+**File:** `src/services/simple_model_service.py`
+
+```python
+def build_database_queries(self, blocks: SearchConceptBlocks, db_names: List[str]):
+    queries = []
+    
+    for db_name in db_names:
+        # Build simple query
+        block_queries = []
+        for block in blocks.blocks:
+            # OR terms within block
+            terms = [f'"{t}"' if ' ' in t else t for t in block.terms_included]
+            block_query = f"({' OR '.join(terms)})"
+            block_queries.append(block_query)
+        
+        # AND blocks together
+        query_string = " AND ".join(block_queries)
+        
+        # Apply database-specific wrapping
+        if db_name == "pubmed":
+            query_string = self._wrap_pubmed(query_string)
+        elif db_name == "scopus":
+            query_string = f"TITLE-ABS-KEY({query_string})"
+        
+        queries.append(DatabaseQuery(
+            id=f"query_{db_name}_{uuid.uuid4().hex[:6]}",
+            database_name=db_name,
+            query_blocks=[b.id for b in blocks.blocks],
+            boolean_query_string=query_string,
+            notes="Generated heuristically"
+        ))
+    
+    plan = DatabaseQueryPlan(project_id=blocks.project_id, queries=queries)
+    meta = self._meta("Generated queries heuristically")
+    return plan, meta
+```
+
+### Step 4: Implement Intelligent Model Service
+
+**File:** `src/services/intelligent_model_service.py`
+
+```python
+def build_database_queries(self, blocks: SearchConceptBlocks, db_names: List[str]):
+    try:
+        # Format blocks for prompt
+        blocks_str = self._format_blocks(blocks.blocks)
+        
+        prompt = PROMPT_STAGE4_QUERY_GENERATION.format(
+            blocks=blocks_str,
+            databases=", ".join(db_names)
+        )
+        
+        raw = self.provider.generate(SYSTEM_PROMPT_LIBRARIAN, prompt)
+        data = self.provider.clean_json_response(raw)
+        
+        # Parse queries
+        queries = []
+        for q_data in data.get("queries", []):
+            queries.append(DatabaseQuery(
+                id=f"query_{q_data['database']}_{uuid.uuid4().hex[:6]}",
+                database_name=q_data["database"],
+                query_blocks=q_data.get("blocks_used", []),
+                boolean_query_string=q_data["query"],
+                notes=q_data.get("notes")
+            ))
+        
+        plan = DatabaseQueryPlan(project_id=blocks.project_id, queries=queries)
+        meta = ModelMetadata(...)
+        return plan, meta
+        
+    except Exception as e:
+        logger.error(f"LLM query generation failed: {e}")
+        # Fallback to simple generation
+        return self._fallback_query_generation(blocks, db_names)
+```
+
+### Step 5: Optional Hit Count Estimation
+
+```python
+def _estimate_hit_counts(self, plan: DatabaseQueryPlan) -> DatabaseQueryPlan:
+    """Estimate hit counts for executable databases."""
+    search_service = get_search_service()
+    
+    for query in plan.queries:
+        if search_service.is_executable(query.database_name):
+            try:
+                # Execute with max_results=1 to get total count only
+                result = search_service.execute_search(
+                    database=query.database_name,
+                    query=query.boolean_query_string,
+                    max_results=1,
+                    save=False  # Don't save results, just get count
+                )
+                query.hit_count_estimate = result.total_hits
+                logger.info(f"{query.database_name}: ~{result.total_hits} hits")
+            except Exception as e:
+                logger.warning(f"Hit count estimation failed for {query.database_name}: {e}")
+                query.notes = f"{query.notes or ''} (Hit count estimation failed)"
+    
+    return plan
+```
+
+### Step 6: Register in Controller
+
+**File:** `src/controller.py`
+
+```python
+from .stages.database_query_plan import DatabaseQueryPlanStage
+
+def _register_default_stages(self):
+    # ...existing stages...
+    self.register_stage("database-query-plan", DatabaseQueryPlanStage)
+
+def get_next_available_stages(self, project_id: str):
+    # ...existing gating logic...
+    query_plan = self.get_artifact(project_id, "DatabaseQueryPlan", DatabaseQueryPlan)
+    
+    if search_blocks is None or not approved(search_blocks):
+        return ["search-concept-expansion"]
+    if query_plan is None or not approved(query_plan):
+        return ["database-query-plan"]
+    
+    return ["database-query-plan"]  # placeholder
+```
+
+### Step 7: Update Demo
+
+**File:** `demo_full_pipeline.py`
+
+```python
+# Stage 4
+print("[Stage 4] Generating DatabaseQueryPlan...")
+stage4 = controller.run_stage(
+    "database-query-plan", 
+    project_id=ctx.id,
+    target_databases=["openalex", "arxiv", "pubmed", "scopus"],
+    estimate_hits=True  # Optional
+)
+plan: DatabaseQueryPlan = stage4.draft_artifact
+
+print(f"Generated {len(plan.queries)} database queries:")
+for query in plan.queries:
+    print(f"\n{query.database_name.upper()}:")
+    print(f"  Query: {query.boolean_query_string[:120]}...")
+    if query.hit_count_estimate:
+        print(f"  Est. hits: ~{query.hit_count_estimate:,}")
+    if query.notes:
+        print(f"  Notes: {query.notes}")
+
+approve(controller, ctx.id, "DatabaseQueryPlan", DatabaseQueryPlan)
+```
+
+---
+
+## Testing Strategy
+
+### Test Cases
+
+**File:** `tests/test_stage4_query_plan.py`
+
+```python
+def test_query_plan_happy_path():
+    """Test full pipeline through Stage 4."""
+    # Run Stages 0-3, approve all
+    # Run Stage 4
+    # Assert: queries generated for each database
+    # Assert: queries are non-empty strings
+    # Assert: blocks referenced in query_blocks
+
+def test_query_plan_database_filtering():
+    """Test specifying subset of databases."""
+    # Run Stage 4 with target_databases=["openalex"]
+    # Assert: only 1 query generated
+    # Assert: database_name == "openalex"
+
+def test_query_plan_hit_estimation():
+    """Test optional hit count estimation."""
+    # Run Stage 4 with estimate_hits=True
+    # Assert: executable databases have hit_count_estimate
+    # Assert: syntax-only databases don't have estimates
+
+def test_query_plan_syntax_validation():
+    """Test generated queries are plausible."""
+    # Run Stage 4
+    # For each query:
+    #   Assert: contains Boolean operators (AND/OR)
+    #   Assert: contains terms from blocks
+    #   Assert: matches database-specific patterns
+```
+
+---
+
+## Success Criteria
+
+### Minimal (MVP)
+
+- ✅ Generates queries for 4+ databases
+- ✅ Uses Boolean operators (AND, OR)
+- ✅ Includes all concept block terms
+- ✅ Persists DatabaseQueryPlan artifact
+- ✅ Tests pass
+
+### Ideal
+
+- ✅ All of MVP
+- ✅ Database-specific syntax (field codes, MeSH)
+- ✅ Hit count estimation for executable databases
+- ✅ LLM-generated with rich domain knowledge
+- ✅ Handles excluded terms (NOT operator)
+- ✅ Suggests MeSH terms for PubMed
+- ✅ Graceful fallback if LLM fails
+
+---
+
+## Risks & Mitigation
+
+| Risk | Impact | Mitigation |
+|------|--------|------------|
+| LLM generates invalid syntax | High | Validate with regex patterns; fallback to templates |
+| Hit count estimation slow | Medium | Make optional; limit to 1-2 databases |
+| Too many databases to support | Medium | Start with 4-6 core databases; expand later |
+| Query too broad (millions of hits) | Medium | LLM can suggest refinements; human review required |
+
+---
+
+## Timeline Estimate
+
+| Task | Time |
+|------|------|
+| Create stage class | 30 min |
+| Add prompts | 15 min |
+| Implement SimpleModelService | 30 min |
+| Implement IntelligentModelService | 45 min |
+| Add hit estimation (optional) | 30 min |
+| Controller integration | 15 min |
+| Tests | 30 min |
+| Demo update | 15 min |
+| **Total** | **3h 30min** |
+
+---
+
+## Output Example
+
+**Generated DatabaseQueryPlan:**
+
+```json
+{
+  "project_id": "project_abc123",
+  "queries": [
+    {
+      "database": "openalex",
+      "query": "(\"clinical decision support\" OR CDSS OR \"AI in healthcare\") AND (hallucination OR \"fabricated information\" OR \"inaccurate output\")",
+      "hit_count_estimate": 1250,
+      "notes": "Using title and abstract fields"
+    },
+    {
+      "database": "pubmed",
+      "query": "((clinical decision support[tiab] OR CDSS[tiab]) AND (hallucination[tiab] OR fabricated information[tiab])) OR decision support systems[mesh]",
+      "notes": "Suggested MeSH: Decision Support Systems, Clinical; Artificial Intelligence"
+    },
+    {
+      "database": "scopus",
+      "query": "TITLE-ABS-KEY((\"clinical decision support\" OR CDSS) AND (hallucination OR \"false information\")) AND PUBYEAR > 2020",
+      "notes": "Syntax-only: Copy to Scopus UI"
+    }
+  ]
+}
+```
+
+---
+
+## Next Steps After Stage 4
+
+1. **Stage 5:** Screening Criteria (inclusion/exclusion rules)
+2. **Stage 6:** Strategy Export (Markdown summary + bundle)
+3. **Execute Queries:** Run searches and collect papers
+4. **Integration:** Connect to existing OrchestratorAgent + SynthesizerAgent
+
+---
+
+## Questions for Clarification
+
+1. **Target databases:** Which 4-6 should be priority? (Suggested: OpenAlex, arXiv, PubMed, Scopus)
+2. **Hit estimation:** Make optional or always run for executable databases?
+3. **Query validation:** Add regex-based syntax validation or trust LLM + human review?
+4. **MeSH suggestions:** Should LLM suggest MeSH terms or leave for human expertise?
+
+---
+
+**Status:** 📋 Ready for implementation  
+**Estimated Duration:** 2-3 hours  
+**Prerequisites:** Stages 0-3 complete ✅  
+**Blocking Issues:** None
+
+---
+
+**Ready to proceed with implementation?** Let me know and I'll start building Stage 4!
+
