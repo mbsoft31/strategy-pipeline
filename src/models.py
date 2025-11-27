@@ -227,6 +227,28 @@ class StrategyPackage:
 
 
 @dataclass
+class SearchResults:
+    """Metadata for executed search results.
+
+    NOTE: This artifact does NOT contain the papers themselves (too large).
+    Papers are stored in separate JSON files referenced by result_file_paths.
+    Use SearchService.load_results(file_path) to read papers.
+    """
+    project_id: str
+    total_results: int  # Total papers before deduplication
+    deduplicated_count: int  # Papers after deduplication
+    databases_searched: List[str]  # e.g., ["arxiv", "openalex", "crossref"]
+    result_file_paths: List[str]  # Paths to JSON files containing papers
+    deduplication_stats: Dict[str, Any]  # {"original_count": 347, "duplicates_removed": 52, ...}
+    execution_time_seconds: float
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    status: ApprovalStatus = ApprovalStatus.DRAFT
+    model_metadata: Optional[ModelMetadata] = None
+    user_notes: Optional[str] = None
+
+
+@dataclass
 class StrategyExportBundle:
     project_id: str
     exported_files: List[str] = field(default_factory=list)  # relative paths under data/<project_id>/export/

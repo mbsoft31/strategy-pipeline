@@ -13,6 +13,7 @@ from ..stages.problem_framing import ProblemFramingStage
 from ..stages.research_questions import ResearchQuestionStage
 from ..stages.search_concept_expansion import SearchConceptExpansionStage
 from ..stages.database_query_plan import DatabaseQueryPlanStage
+from ..stages.query_execution import QueryExecutionStage
 from ..stages.screening_criteria import ScreeningCriteriaStage
 from ..stages.strategy_export import StrategyExportStage
 

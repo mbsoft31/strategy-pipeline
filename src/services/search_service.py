@@ -38,11 +38,17 @@ class SearchResultsSummary:
     execution_time: float
     error: Optional[str] = None
     result_file: Optional[str] = None  # Path to saved results
+    file_path: Optional[str] = None  # Alias for result_file (compatibility)
     timestamp: str = None
 
     def __post_init__(self):
         if self.timestamp is None:
             self.timestamp = datetime.now().isoformat()
+        # Ensure file_path is synchronized with result_file
+        if self.file_path is None and self.result_file is not None:
+            self.file_path = self.result_file
+        elif self.result_file is None and self.file_path is not None:
+            self.result_file = self.file_path
 
 
 class SearchService:
@@ -70,14 +76,28 @@ class SearchService:
         'wos': 'Web of Science connector requires API key. Use copy/paste for now.',
     }
 
-    def __init__(self, results_dir: str = "data/search_results"):
-        """Initialize search service with result storage directory."""
+    def __init__(self, base_dir: str = "data", project_id: Optional[str] = None):
+        """Initialize search service with optional project scoping.
+
+        Args:
+            base_dir: Base directory for data storage
+            project_id: Optional project ID for scoped file organization
+        """
+        self.base_dir = Path(base_dir)
+        self.project_id = project_id
+
+        # Determine results directory (project-scoped or global)
+        if project_id:
+            self.results_dir = self.base_dir / project_id / "search_results"
+        else:
+            self.results_dir = self.base_dir / "search_results"  # Legacy/backward compatible
+
+        self.results_dir.mkdir(parents=True, exist_ok=True)
+
         dedup_config = DeduplicationConfig()
         self.deduplicator = Deduplicator(config=dedup_config)
         self._provider_instances = {}
         self._provider_configs = {}
-        self.results_dir = Path(results_dir)
-        self.results_dir.mkdir(parents=True, exist_ok=True)
         logger.info(f"SearchService initialized (adapter layer) - results dir: {self.results_dir}")
 
     def get_available_databases(self) -> List[str]:
@@ -370,6 +390,39 @@ class SearchService:
         logger.info(f"Exported to {output_path}")
         return output_path
 
+    def save_deduplicated_results(
+        self,
+        documents: List[Dict],
+        databases: List[str]
+    ) -> str:
+        """Save deduplicated papers to merged result file.
+
+        Args:
+            documents: Deduplicated papers (as dicts)
+            databases: List of database names that were merged
+
+        Returns:
+            Path to saved file
+        """
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        db_label = "_".join(databases[:3])  # Limit filename length
+        filename = f"deduplicated_{db_label}_{timestamp}.json"
+        filepath = self.results_dir / filename
+
+        # Save using existing save mechanism
+        with open(filepath, 'w', encoding='utf-8') as f:
+            json.dump({
+                'metadata': {
+                    'databases_merged': databases,
+                    'timestamp': datetime.now().isoformat(),
+                    'total_documents': len(documents)
+                },
+                'documents': documents
+            }, f, indent=2, ensure_ascii=False)
+
+        logger.info(f"Saved {len(documents)} deduplicated results to {filepath}")
+        return str(filepath)
+
 
 # Singleton instance for easy access
 _search_service = None
@@ -380,4 +433,3 @@ def get_search_service() -> SearchService:
     if _search_service is None:
         _search_service = SearchService()
     return _search_service
-
