@@ -8,11 +8,12 @@
 ## 📊 Progress Overview
 
 ```
-CRITICS.md Recommendations (4 Total)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✅ 1/4 Complete  ⏳ 3/4 In Progress
+CRITICS.md Recommendations (4 Major + 1 Minor = 5 Total)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ 1/5 Complete  ⏳ 4/5 In Progress
 
-Progress: ███████░░░░░░░░░░░░░░░░░ 25%
+Progress: ████░░░░░░░░░░░░░░░░░░░░ 20%
+Next: Configuration Management (Phase 1.5)
 ```
 
 ---
@@ -35,7 +36,35 @@ Progress: ███████░░░░░░░░░░░░░░░░�
 
 ---
 
-### ⏳ Phase 2: Frontend Testing (NEXT - IN PLANNING)
+### ⏳ Phase 1.5: Configuration Management (NEXT - RECOMMENDED)
+**Status:** Ready to start  
+**Estimated Duration:** 3 hours  
+**Target Date:** Before Phase 2
+
+**Objectives:**
+- Upgrade to Pydantic Settings v2
+- Create environment-specific configs (dev/test/prod)
+- Add validation and type safety
+- Separate secrets management
+- Enable CI/CD environment switching
+
+**Critique Item:** 🎯 #5 - Configuration Management (from "Areas for Improvement")
+
+**Why Now?**
+- ✅ Quick win before heavier frontend work
+- ✅ Foundation for CI/CD (Phase 3)
+- ✅ Makes testing easier (Phase 2)
+- ✅ Low risk, high value
+- ✅ Only 3 hours vs 6-8 for Phase 2
+
+**Prerequisites:** ✅ All met
+- [x] Backend refactored and stable
+- [x] Pydantic already in use
+- [x] Clear migration path
+
+---
+
+### ⏳ Phase 2: Frontend Testing (IN PLANNING)
 **Status:** Ready to start  
 **Estimated Duration:** 6-8 hours  
 **Target Date:** TBD
@@ -210,9 +239,10 @@ npm test
 ## 🔄 Iteration Cadence
 
 ```
-Week 1: ✅ Phase 1 Complete
+Week 1: ✅ Phase 1 Complete (Controller Refactoring)
         │
-Week 2: ⏳ Phase 2 (Frontend Testing)
+Week 2: ⏳ Phase 1.5 (Config Management) - 3 hours
+        │   Phase 2 (Frontend Testing) - 6-8 hours
         │
 Week 3: ⏳ Phase 3 (CI/CD)
         │
@@ -221,7 +251,7 @@ Week 4: ⏳ Phase 4 (UI Cleanup)
 Week 5: 🔮 Phase 5 (Production Ready)
 ```
 
-**Velocity:** ~1 phase per week  
+**Velocity:** ~1-2 phases per week  
 **Total Timeline:** 4-5 weeks  
 **Risk Buffer:** +1 week contingency
 
