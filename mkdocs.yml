@@ -7,6 +7,11 @@ repo_name: mbsoft31/strategy-pipeline
 repo_url: https://github.com/mbsoft31/strategy-pipeline
 edit_uri: edit/main/docs/
 
+# Exclude legacy/unlinked documentation
+exclude_docs: |
+  friends-critics/
+  next-steps/
+
 theme:
   name: material
   palette:
@@ -118,4 +123,3 @@ extra:
       link: mailto:bekhouche.mouadh@univ-oeb.dz
 
 copyright: Copyright &copy; 2025 Bekhouche Mouadh
-

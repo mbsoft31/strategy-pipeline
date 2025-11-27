@@ -196,22 +196,4 @@ Artifact approval states.
       show_source: false
       heading_level: 4
       show_signature_annotations: true
-      members:
-        - DRAFT
-        - APPROVED
-        - REJECTED
-
----
-
-## Base Classes
-
-### BaseArtifact
-
-Base class for all pipeline artifacts.
-
-::: src.models.BaseArtifact
-    options:
-      show_source: false
-      heading_level: 4
-      show_signature_annotations: true
 

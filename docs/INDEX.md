@@ -9,7 +9,7 @@ Production-ready systematic literature review pipeline with LLM-powered search s
 - 🏗️ [Architecture](architecture/overview.md) - System design
 - 🔌 [API Reference](api-reference/index.md) - Auto-generated API docs
 - 💻 [Development](development/contributing.md) - Contributing guide
-- 📝 [Examples](examples/) - Code examples
+- 📝 [Examples](examples/README.md) - Code examples
 
 ## ✨ Features
 
