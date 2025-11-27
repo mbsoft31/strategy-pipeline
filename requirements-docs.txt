@@ -1,0 +1,12 @@
+# Documentation dependencies for MkDocs
+pymdown-extensions>=10.0
+# Additional plugins
+
+mkdocstrings[python]>=0.24.0
+# Auto-generated API docs from docstrings
+
+mkdocs-material>=9.4.0
+mkdocs>=1.5.0
+# Core MkDocs
+
+
